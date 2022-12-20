@@ -1,0 +1,36 @@
+.map-row {
+  height: 30px;
+}
+
+.map-tile {
+  display: inline-block;
+
+  width: 30px;
+  height: 30px;
+
+  border: 1px solid black;
+}
+
+.map-tile-hp-span {
+  position: fixed;
+}
+
+.map-tile.blue {
+  background-color: blue;
+}
+
+.map-tile.grey {
+  background-color: grey;
+}
+
+.map-tile.red {
+  background-color: red;
+}
+
+.map-tile.yellow {
+  background-color: yellow;
+}
+
+.map-tile:hover {
+  background-color: green;
+}

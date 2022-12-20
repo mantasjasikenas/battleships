@@ -1,0 +1,12 @@
+.command-input {
+  position: fixed;
+  right: 25px;
+  bottom: 25px;
+}
+
+.command-input .icon {
+  font-size: xx-large;
+}
+.command-input .icon:hover {
+  cursor: pointer;
+}

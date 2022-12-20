@@ -1,0 +1,8 @@
+.logger-config-body {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 50px;
+  z-index: 1;
+  overflow-x: auto;
+}
