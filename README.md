@@ -11,7 +11,7 @@ Event propagation steps:
 1. Server received E
 1. Server sends E to Client_1, Client_2
 1. Client_i receives E
-1. Client_i resolved callbacks associated with id of E and invokes them by passing the data send together with E
+1. Client_i resolves callbacks associated with id of E and invokes them by passing the data send together with E
 
 ## Display
 FE is implemented using React. Different game stages have React components to render them (NewMatch, Pregame, MatchDisplay).
