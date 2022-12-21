@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Message } from '../../models/Message/Message';
 import { PlayerTeam } from '../../models/Player';
 import { CommsEventProps } from '../../services/CommandInterpreter/Interpreter/Interpreter';
-import ConnectionMediatorService, {
+import HubConnectionService, {
   MatchEventNames,
-} from '../../services/ConnectionMediatorService/ConnectionMediatorService';
+} from '../../services/HubConnectionService/HubConnectionService';
 import MatchProvider from '../../services/MatchProvider/MatchProvider';
 import { MessageSprite } from './MessageSprite/MessageSprite';
 
@@ -32,7 +32,7 @@ export function MessageDisplay() {
   const [messages, setMessages] = useState([] as DisplayableMessage[]);
 
   useEffect(() => {
-    ConnectionMediatorService.Instance.addSingular(
+    HubConnectionService.Instance.addSingular(
       MatchEventNames.Message,
       handleCommsEvent
     );

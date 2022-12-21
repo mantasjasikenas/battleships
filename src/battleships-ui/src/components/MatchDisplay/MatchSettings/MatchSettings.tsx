@@ -1,8 +1,8 @@
 import Dropdown from 'react-bootstrap/esm/Dropdown';
 import MatchSettings, { GameMode } from '../../../models/MatchSettings';
-import ConnectionMediatorService, {
+import HubConnectionService, {
   MatchEventNames,
-} from '../../../services/ConnectionMediatorService/ConnectionMediatorService';
+} from '../../../services/HubConnectionService/HubConnectionService';
 
 interface MatchSettingsProps {
   matchSettings: MatchSettings;
@@ -24,7 +24,7 @@ export default function MatchSettingsConfig(props: MatchSettingsProps) {
   }
 
   function onSettingsUpdate() {
-    ConnectionMediatorService.Instance.sendEvent(
+    HubConnectionService.Instance.sendEvent(
       MatchEventNames.PlayerUpdatedMatchSettings,
       { matchSettings: matchSettings }
     );

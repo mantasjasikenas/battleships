@@ -5,9 +5,9 @@ import { Match } from '../../../models/Match';
 import MatchSettings from '../../../models/MatchSettings';
 import { Player, PlayerTeam } from '../../../models/Player';
 import { AttackTurn } from '../../../models/Turns/AttackTurn';
-import ConnectionMediatorService, {
+import HubConnectionService, {
   MatchEventNames,
-} from '../../../services/ConnectionMediatorService/ConnectionMediatorService';
+} from '../../../services/HubConnectionService/HubConnectionService';
 import { MatchService } from '../../../services/MatchService/MatchService';
 import { PlayerService } from '../../../services/PlayerService/PlayerService';
 import MatchSettingsConfig from '../MatchSettings/MatchSettings';
@@ -31,23 +31,23 @@ export default function Pregame() {
   const [readyPlayerIds, setReadyPlayerIds] = useState([] as number[]);
 
   useEffect(() => {
-    ConnectionMediatorService.Instance.add(
+    HubConnectionService.Instance.add(
       MatchEventNames.PlayerJoined,
       handlePlayerJoinedEvent
     );
-    ConnectionMediatorService.Instance.add(
+    HubConnectionService.Instance.add(
       MatchEventNames.SecondPlayerJoinedConfirmation,
       handlePlayerJoinedEvent
     );
-    ConnectionMediatorService.Instance.add(
+    HubConnectionService.Instance.add(
       MatchEventNames.PlayerUpdatedMatchSettings,
       handleMatchSettingsChangedEvent
     );
-    ConnectionMediatorService.Instance.add(
+    HubConnectionService.Instance.add(
       MatchEventNames.PlayerLockedInSettings,
       handlePlayerLockedInSettingsEvent
     );
-    ConnectionMediatorService.Instance.addSingular(
+    HubConnectionService.Instance.addSingular(
       MatchEventNames.PlayerFirstTurnClaim,
       handleFirstTurnClaimEvent
     );
@@ -89,7 +89,7 @@ export default function Pregame() {
   function onStartMatchButtonClick(): void {
     const currentPlayer = PlayerService.getFromSessionStorage();
 
-    ConnectionMediatorService.Instance.sendEvent(
+    HubConnectionService.Instance.sendEvent(
       MatchEventNames.PlayerLockedInSettings,
       { player: currentPlayer }
     );
@@ -118,7 +118,7 @@ export default function Pregame() {
     match.players.push(enemyPlayer);
 
     if (currentPlayer != null) {
-      ConnectionMediatorService.Instance.sendEvent(
+      HubConnectionService.Instance.sendEvent(
         MatchEventNames.SecondPlayerJoinedConfirmation,
         { player: currentPlayer }
       );
@@ -155,7 +155,7 @@ export default function Pregame() {
         MatchService.initMatchPlayerVehicles();
         MatchService.initMatchAvailableAmmo();
 
-        ConnectionMediatorService.Instance.sendEvent(
+        HubConnectionService.Instance.sendEvent(
           MatchEventNames.MatchStarted
         );
 
@@ -187,7 +187,7 @@ export default function Pregame() {
         props.winnerPlayerId = currentPlayer.id;
       }
 
-      ConnectionMediatorService.Instance.sendEvent(
+      HubConnectionService.Instance.sendEvent(
         MatchEventNames.ResolvedFirstTurnClaim,
         props
       );
@@ -204,7 +204,7 @@ export default function Pregame() {
       claimStrength: firstTurnClaimStrength,
     } as FirstTurnClaimProps;
 
-    ConnectionMediatorService.Instance.sendEvent(
+    HubConnectionService.Instance.sendEvent(
       MatchEventNames.PlayerFirstTurnClaim,
       data
     );

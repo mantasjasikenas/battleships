@@ -1,9 +1,9 @@
 import { AmmoType } from '../../../models/Ammo';
 import { Player, PlayerTeam } from '../../../models/Player';
 import { AttackTurnEventProps } from '../../AttackHandlerService/AttackHandlerService';
-import ConnectionMediatorService, {
+import HubConnectionService, {
   MatchEventNames,
-} from '../../ConnectionMediatorService/ConnectionMediatorService';
+} from '../../HubConnectionService/HubConnectionService';
 import MatchProvider from '../../MatchProvider/MatchProvider';
 
 const AsciiEmojiParser = require('ascii-emoji-parser');
@@ -146,7 +146,7 @@ export class Interpreter implements IInterpreter {
         ammoType: ammoType,
       };
 
-      ConnectionMediatorService.Instance.sendEvent(
+      HubConnectionService.Instance.sendEvent(
         MatchEventNames.AttackPerformed,
         data
       );
@@ -168,10 +168,7 @@ export class Interpreter implements IInterpreter {
         message: emote,
       };
 
-      ConnectionMediatorService.Instance.sendEvent(
-        MatchEventNames.Message,
-        data
-      );
+      HubConnectionService.Instance.sendEvent(MatchEventNames.Message, data);
     };
   }
 
@@ -190,10 +187,7 @@ export class Interpreter implements IInterpreter {
         message: message,
       };
 
-      ConnectionMediatorService.Instance.sendEvent(
-        MatchEventNames.Message,
-        data
-      );
+      HubConnectionService.Instance.sendEvent(MatchEventNames.Message, data);
     };
   }
 }

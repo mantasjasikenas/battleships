@@ -2,9 +2,9 @@ import { useRef } from 'react';
 import Button from 'react-bootstrap/esm/Button';
 import Form from 'react-bootstrap/esm/Form';
 import { generatePath, useNavigate } from 'react-router-dom';
-import ConnectionMediatorService, {
+import HubConnectionService, {
   MatchEventNames,
-} from '../../services/ConnectionMediatorService/ConnectionMediatorService';
+} from '../../services/HubConnectionService/HubConnectionService';
 import { PlayerService } from '../../services/PlayerService/PlayerService';
 
 export default function NewMatch() {
@@ -21,11 +21,11 @@ export default function NewMatch() {
 
     PlayerService.saveToSessionStorage(player);
 
-    ConnectionMediatorService.Instance.sendEvent(MatchEventNames.PlayerJoined, {
+    HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerJoined, {
       player: player,
     });
 
-    ConnectionMediatorService.Instance.sendEvent(MatchEventNames.NewMatch);
+    HubConnectionService.Instance.sendEvent(MatchEventNames.NewMatch);
 
     const path = generatePath('match/pregame');
 

@@ -1,8 +1,8 @@
-import { MatchEventNames } from '../../ConnectionMediatorService/ConnectionMediatorService';
+import { MatchEventNames } from '../../HubConnectionService/HubConnectionService';
 import MatchEventsCallbackInvokeable from './MatchEventsInvokeable';
 
 export default class MatchEventsCallbackHandler {
-  protected observersByEvent: {
+  protected invokeables: {
     [event: number]: MatchEventsCallbackInvokeable[];
   } = {};
 
@@ -13,27 +13,23 @@ export default class MatchEventsCallbackHandler {
         break;
       }
 
-      this.observersByEvent[event] = [];
+      this.invokeables[event] = [];
     }
   }
 
   public notify(event: MatchEventNames, data: any): void {
-    const eventObservers = this.observersByEvent[event];
+    const eventObservers = this.invokeables[event];
 
     eventObservers?.forEach((observer) => observer.onNotify(data));
   }
 
   public add(event: MatchEventNames, action: (data: any) => void) {
-    this.observersByEvent[event].push(
-      new MatchEventsCallbackInvokeable(action)
-    );
+    this.invokeables[event].push(new MatchEventsCallbackInvokeable(action));
   }
 
   public addSingular(event: MatchEventNames, action: (data: any) => void) {
-    if (this.observersByEvent[event].length === 0) {
-      this.observersByEvent[event].push(
-        new MatchEventsCallbackInvokeable(action)
-      );
+    if (this.invokeables[event].length === 0) {
+      this.invokeables[event].push(new MatchEventsCallbackInvokeable(action));
     }
   }
 }

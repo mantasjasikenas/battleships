@@ -11,9 +11,9 @@ import {
   AttackHandlerService,
   AttackTurnEventProps,
 } from '../../services/AttackHandlerService/AttackHandlerService';
-import ConnectionMediatorService, {
+import HubConnectionService, {
   MatchEventNames,
-} from '../../services/ConnectionMediatorService/ConnectionMediatorService';
+} from '../../services/HubConnectionService/HubConnectionService';
 import MatchProvider from '../../services/MatchProvider/MatchProvider';
 import AmmoRack from './AmmoRack/AmmoRack';
 import MapGrid from './MapGrid/MapGrid';
@@ -29,7 +29,7 @@ export default function MatchDisplay() {
   const redPlayer = match.players[redPlayerIdx];
 
   useEffect(() => {
-    ConnectionMediatorService.Instance.addSingular(
+    HubConnectionService.Instance.addSingular(
       MatchEventNames.AttackPerformed,
       handleAttackTurnEvent
     );
@@ -143,7 +143,7 @@ export default function MatchDisplay() {
       return;
     }
 
-    ConnectionMediatorService.Instance.sendEvent(
+    HubConnectionService.Instance.sendEvent(
       MatchEventNames.AttackPerformed,
       {
         offencePlayerId: bluePlayer.id,
