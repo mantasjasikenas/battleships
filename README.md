@@ -88,11 +88,17 @@ Another game mode that differs from the classic rules is the *Fog of war* game m
 
 **Service classes**
 
+- *HubConnectionService* - service handles the SignalR connections and event sending
+
 - *MatchService* - service defines various methods to initialize the models required for a new match 
 
 - *AttachHandlerService* - service defines methods for resolving the appropriate function to perform an attack based on the given ammo type
 
 - *PlayerService* - service defines methods new player creation as well as player object saving and fetching via session storage
+
+- *MatchEventsCallbackHandler* - class is responsible for handling received events
+
+- *MatchEventsCallbackInvokeable* - class is used by *MatchEventsCallbackHandler* to organize the event handlers
 
 ## Quickstart guide
 
