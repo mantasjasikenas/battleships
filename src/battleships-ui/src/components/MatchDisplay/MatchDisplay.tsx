@@ -112,7 +112,9 @@ export default function MatchDisplay() {
               <br />
               {ship.parts.map((part, indexPart) => (
                 <span key={`${indexShip}-${indexPart}`}>
-                  {match.settings.gameMode === GameMode.Ammo ? 10 : 1}{' '}
+                  {match.settings.gameMode === GameMode.Ammo 
+                  //? 10 : 1}
+                  ? (part as ModularShipPart).hp : 1}{' '}
                 </span>
               ))}
               <br />
