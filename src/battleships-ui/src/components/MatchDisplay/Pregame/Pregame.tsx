@@ -155,9 +155,7 @@ export default function Pregame() {
         MatchService.initMatchPlayerVehicles();
         MatchService.initMatchAvailableAmmo();
 
-        HubConnectionService.Instance.sendEvent(
-          MatchEventNames.MatchStarted
-        );
+        HubConnectionService.Instance.sendEvent(MatchEventNames.MatchStarted);
 
         submitFirstTurnClaim();
       }
@@ -168,10 +166,10 @@ export default function Pregame() {
     const data = eventData as FirstTurnClaimProps;
 
     const currentPlayer = match.players.find(
-      (player) => player.team == PlayerTeam.Blue
+      (player) => player.team == PlayerTeam.Allies
     )!;
     const enemyPlayer = match.players.find(
-      (player) => player.team == PlayerTeam.Red
+      (player) => player.team == PlayerTeam.Enemy
     )!;
 
     if (data.playerId != currentPlayer.id) {

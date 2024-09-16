@@ -130,8 +130,8 @@ export class Interpreter implements IInterpreter {
     return (posX: number, posY: number, ammoType: AmmoType) => {
       const match = MatchProvider.Instance.match;
 
-      const player = match.players.find((p) => p.team === PlayerTeam.Blue)!;
-      const enemy = match.players.find((p) => p.team === PlayerTeam.Red)!;
+      const player = match.players.find((p) => p.team === PlayerTeam.Allies)!;
+      const enemy = match.players.find((p) => p.team === PlayerTeam.Enemy)!;
 
       if (!player || !enemy) {
         return;
@@ -156,7 +156,7 @@ export class Interpreter implements IInterpreter {
   private getEmoteCommandExecutable(): (emote: string) => void {
     return (emote: string) => {
       const player = MatchProvider.Instance.match.players.find(
-        (p) => p.team === PlayerTeam.Blue
+        (p) => p.team === PlayerTeam.Allies
       )!;
 
       if (!player) {
@@ -175,7 +175,7 @@ export class Interpreter implements IInterpreter {
   private getMessageCommandExecutable(): (message: string) => void {
     return (message: string) => {
       const player = MatchProvider.Instance.match.players.find(
-        (p) => p.team === PlayerTeam.Blue
+        (p) => p.team === PlayerTeam.Allies
       )!;
 
       if (!player) {

@@ -5,8 +5,8 @@ import { AttackTurn } from './Turns/AttackTurn';
 import { MovementTurn } from './Turns/MovementTurn';
 
 export enum PlayerTeam {
-  Blue = 'Blue',
-  Red = 'Red',
+  Allies = 'Allies',
+  Enemy = 'Enemy',
 }
 
 export class Player {
@@ -23,7 +23,7 @@ export class Player {
   constructor(object: Partial<Player>) {
     this.id = object.id ?? Math.round(Math.random() * 1000);
     this.name = object.name ?? 'New player';
-    this.team = !!object.team ? PlayerTeam[object.team] : PlayerTeam.Blue;
+    this.team = !!object.team ? PlayerTeam[object.team] : PlayerTeam.Allies;
     this.ships = object.ships ?? [];
     this.airships = object.airships ?? [];
     this.map = new MatchMap();
@@ -40,6 +40,6 @@ export class Player {
 
   public invertTeam() {
     this.team =
-      this.team === PlayerTeam.Blue ? PlayerTeam.Red : PlayerTeam.Blue;
+      this.team === PlayerTeam.Allies ? PlayerTeam.Enemy : PlayerTeam.Allies;
   }
 }

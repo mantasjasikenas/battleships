@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
-import { Ammo, AmmoType } from '../../models/Ammo';
+import { Ammo } from '../../models/Ammo';
 import { Match } from '../../models/Match';
-import MatchMap, { MapTile } from '../../models/MatchMap';
+import { MapTile } from '../../models/MatchMap';
 import { GameMode } from '../../models/MatchSettings';
 import { PlayerTeam } from '../../models/Player';
-import { ShipClass } from '../../models/Ships/ShipClass';
 import { ModularShipPart } from '../../models/Ships/ShipPart';
 import {
   AttackHandlerService,
@@ -17,16 +16,26 @@ import HubConnectionService, {
 import MatchProvider from '../../services/MatchProvider/MatchProvider';
 import AmmoRack from './AmmoRack/AmmoRack';
 import MapGrid from './MapGrid/MapGrid';
+import { AttackTurn } from '../../models/Turns/AttackTurn';
+import { toast } from 'sonner';
 
 export default function MatchDisplay() {
   const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
 
   const match = MatchProvider.Instance.match;
-  const bluePlayerIdx = match.players[0].team === PlayerTeam.Blue ? 0 : 1;
-  const redPlayerIdx = Math.abs(bluePlayerIdx - 1);
-  const bluePlayer = match.players[bluePlayerIdx];
-  const redPlayer = match.players[redPlayerIdx];
+
+  const currentPlayerIdx = match.players[0].team === PlayerTeam.Allies ? 0 : 1;
+  const enemyPlayerIdx = Math.abs(currentPlayerIdx - 1);
+
+  const currentPlayer = match.players[currentPlayerIdx];
+  const enemyPlayer = match.players[enemyPlayerIdx];
+
+  const [activePlayer, setActivePlayer] = useState(
+    match.players.find((player) => player.attackTurns.length > 0)!
+  );
+
+  const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(null);
 
   useEffect(() => {
     HubConnectionService.Instance.addSingular(
@@ -39,10 +48,10 @@ export default function MatchDisplay() {
     <div className="container d-flex justify-content-center">
       <div className="col-2">
         <div>
-          {bluePlayer?.name} {bluePlayer?.id} {bluePlayer?.team}
+          {currentPlayer?.name} {currentPlayer?.id} {currentPlayer?.team}
         </div>
         <div>
-          {bluePlayer?.ships.map((ship, indexShip) => (
+          {currentPlayer?.ships.map((ship, indexShip) => (
             <div key={indexShip}>
               <span>{ship.constructor.name}</span>
               <br />
@@ -60,14 +69,16 @@ export default function MatchDisplay() {
       </div>
       <div className="col-8">
         <div className="w-100 d-flex  justify-content-center">{match.name}</div>
-        <div className="w-100 d-flex justify-content-center">
+        <div className="w-100 d-flex justify-content-center gap-2">
           <MapGrid
-            player={bluePlayer}
+            player={currentPlayer}
+            title="Your map"
             selectedTile={selectedTile}
             onTileSelect={onOwnTileSelect}
           />
           <MapGrid
-            player={redPlayer}
+            title="Enemy map"
+            player={enemyPlayer}
             selectedTile={selectedTile}
             onTileSelect={onAttackTurnTargetTileSelect}
           />
@@ -76,20 +87,26 @@ export default function MatchDisplay() {
         <div className="w-100 mt-3 d-flex justify-content-center">
           <Button
             size="lg"
-            disabled={!selectedTile || bluePlayer.attackTurns.length < 1}
+            disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
             variant="danger"
             onClick={() => onAttack()}
           >
             Attack!
           </Button>
         </div>
+
+        <h3 className="w-100 d-flex justify-content-center mt-3">
+          {activePlayer.id === currentPlayer.id
+            ? 'Your turn!'
+            : activePlayer.name + "'s turn!"}
+        </h3>
       </div>
       <div className="col-2">
         <div>
-          {redPlayer?.name} {redPlayer?.id} {redPlayer?.team}
+          {enemyPlayer?.name} {enemyPlayer?.id} {enemyPlayer?.team}
         </div>
         <div>
-          {redPlayer?.ships.map((ship, indexShip) => (
+          {enemyPlayer?.ships.map((ship, indexShip) => (
             <div key={indexShip}>
               <span>{ship.constructor.name}</span>
               <br />
@@ -107,51 +124,54 @@ export default function MatchDisplay() {
   );
 
   function onAmmoSelect(ammo: Ammo): void {
-    if (bluePlayer.attackTurns.length < 1) {
-      console.error('No attack turns left!');
-      return;
-    }
+    setSelectedAmmo(ammo);
 
-    bluePlayer.attackTurns[0].ammo = ammo;
+    /* if (currentPlayer.attackTurns.length < 1) {
+      toast.error('Sorry, it is not your turn!');
+      return;
+    } */
+
+    currentPlayer.attackTurns[0].ammo = ammo;
   }
 
   function onAttackTurnTargetTileSelect(tile: MapTile): void {
-    if (bluePlayer.attackTurns.length < 1) {
-      console.error('No attack turns left!');
+    if (currentPlayer.attackTurns.length < 1) {
+      toast.error('Sorry, it is not your turn!');
       return;
     }
 
-    const turn = bluePlayer.attackTurns[0];
+    const turn = currentPlayer.attackTurns[0];
     setSelectedTile(tile);
 
     turn.tile = tile;
   }
 
   function onOwnTileSelect(): void {
-    const turn = bluePlayer.attackTurns[0];
+    const turn = currentPlayer.attackTurns[0];
     setSelectedTile(null);
     turn.tile = undefined!;
-    console.error('Cannot attack own ships!');
+    toast.error('Cannot attack own ships!');
   }
 
   function onAttack(): void {
-    const turn = bluePlayer.attackTurns[0];
+    const turn = currentPlayer.attackTurns[0];
+
+    if (!turn.ammo && selectedAmmo) {
+      turn.ammo = selectedAmmo;
+    }
 
     if (!turn.tile || !turn.ammo) {
-      console.error('Select ammo and sector to attack first!');
+      toast.error('Select ammo and sector to attack first!');
 
       return;
     }
 
-    HubConnectionService.Instance.sendEvent(
-      MatchEventNames.AttackPerformed,
-      {
-        offencePlayerId: bluePlayer.id,
-        defencePlayerId: redPlayer.id,
-        tile: turn.tile,
-        ammoType: turn.ammo.type,
-      }
-    );
+    HubConnectionService.Instance.sendEvent(MatchEventNames.AttackPerformed, {
+      offencePlayerId: currentPlayer.id,
+      defencePlayerId: enemyPlayer.id,
+      tile: turn.tile,
+      ammoType: turn.ammo.type,
+    });
 
     setSelectedTile(null);
   }
@@ -170,6 +190,30 @@ export default function MatchDisplay() {
     );
 
     attackFunc(mapTile, defencePlayer!.map);
+
+    // switch active player and update attack turns
+    // find next player based on game players order
+    const currentPlayerIdx = match.players.findIndex(
+      (player) => player.id === offencePlayerId
+    );
+
+    const players = match.players;
+
+    // there shold more than 2 players. go to next player based on the  order of players
+    const nextPlayerIdx =
+      currentPlayerIdx + 1 < players.length ? currentPlayerIdx + 1 : 0;
+    const nextPlayer = match.players[nextPlayerIdx];
+
+    // if next player has no attack turns, give him one
+    if (nextPlayer.attackTurns.length === 0) {
+      nextPlayer.attackTurns.push(new AttackTurn());
+    }
+
+    // take turn from current player
+    const currentPlayer = match.players[currentPlayerIdx];
+    currentPlayer.attackTurns.shift();
+
+    setActivePlayer(nextPlayer);
 
     rerender();
   }

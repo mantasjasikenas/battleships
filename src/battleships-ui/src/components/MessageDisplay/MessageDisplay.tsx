@@ -40,7 +40,7 @@ export function MessageDisplay() {
 
   function handleCommsEvent(data: CommsEventProps) {
     const currentPlayer = MatchProvider.Instance.match.players.find(
-      (p) => p.team === PlayerTeam.Blue
+      (p) => p.team === PlayerTeam.Allies
     )!;
 
     if (data.player.id === currentPlayer.id) {

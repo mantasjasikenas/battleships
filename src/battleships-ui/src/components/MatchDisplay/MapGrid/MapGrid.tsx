@@ -4,15 +4,12 @@ import { Player, PlayerTeam } from '../../../models/Player';
 import { ModularShipPart } from '../../../models/Ships/ShipPart';
 
 import './MapGrid.css';
-import { SelectedTileDecorator } from '../../../models/Map/SelectedTileDecorator';
-import { DestroyedTileDecorator } from '../../../models/Map/DestroyedTileDecorator';
-import { ShipPartTileDecorator } from '../../../models/Map/ShipPartTileDecorator';
-import { AttackedTileDecorator } from '../../../models/Map/AttackedTileDecorator';
 import { TileColor } from '../../../models/Map/TileColors';
 
 interface MapGridProps {
   player: Player;
   selectedTile: MapTile | null;
+  title?: string;
   onTileSelect: (tile: MapTile) => void;
 }
 
@@ -26,19 +23,21 @@ interface MapGridTileProps {
 export default function MapGrid({
   player,
   selectedTile,
+  title,
   onTileSelect,
 }: MapGridProps) {
-  const isEnemyMap = player?.team == PlayerTeam.Red;
+  const isEnemyMap = player?.team === PlayerTeam.Enemy;
 
   return player ? (
-    <div className="w-100 d-flex justify-content-center">
+    <div className="w-100 d-flex flex-column align-items-center">
+      {title && <h4>{title}</h4>}
       <div>
         {player.map.tiles.map((row, idxX) => (
           <div className="map-row" key={idxX}>
             {row.map((tile, idxY) => {
               return (
                 <MapGridTile
-                  isSelected={selectedTile == tile}
+                  isSelected={selectedTile === tile}
                   tile={tile}
                   onTileSelect={onTileSelect}
                   isEnemyMap={isEnemyMap}
