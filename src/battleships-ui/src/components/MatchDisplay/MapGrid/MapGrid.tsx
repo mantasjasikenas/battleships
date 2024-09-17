@@ -82,7 +82,7 @@ function MapGridTile({
       return TileColor.Red;
     }
     if (tile.isAttacked) {
-      return TileColor.Yellow;
+      return tile.shipPart ? TileColor.LightCoral : TileColor.Yellow;
     }
     if (!isEnemyMap && tile.shipPart) {
       return TileColor.Blue;

@@ -31,6 +31,10 @@
   background-color: yellow;
 }
 
+.map-tile.lightcoral {
+  background-color: lightcoral;
+}
+
 .map-tile:hover {
   background-color: green;
 }

@@ -3,5 +3,6 @@ export enum TileColor {
   Yellow = 'yellow',
   Blue = 'blue',
   Red = 'red',
+  LightCoral = 'lightcoral',
   Transparent = '',
 }

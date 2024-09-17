@@ -50,6 +50,7 @@ export default function MatchDisplay() {
         <div>
           {currentPlayer?.name} {currentPlayer?.id} {currentPlayer?.team}
         </div>
+        {/* 
         <div>
           {currentPlayer?.ships.map((ship, indexShip) => (
             <div key={indexShip}>
@@ -66,6 +67,7 @@ export default function MatchDisplay() {
             </div>
           ))}
         </div>
+          */}
       </div>
       <div className="col-8">
         <div className="w-100 d-flex  justify-content-center">{match.name}</div>
@@ -105,6 +107,7 @@ export default function MatchDisplay() {
         <div>
           {enemyPlayer?.name} {enemyPlayer?.id} {enemyPlayer?.team}
         </div>
+        {/* 
         <div>
           {enemyPlayer?.ships.map((ship, indexShip) => (
             <div key={indexShip}>
@@ -121,6 +124,7 @@ export default function MatchDisplay() {
             </div>
           ))}
         </div>
+         */}
       </div>
     </div>
   );
