@@ -11,6 +11,7 @@ import HubConnectionService, {
 import { MatchService } from '../../../services/MatchService/MatchService';
 import { PlayerService } from '../../../services/PlayerService/PlayerService';
 import MatchSettingsConfig from '../MatchSettings/MatchSettings';
+import { toast } from 'sonner';
 
 const minRequiredPlayers: number = 2;
 
@@ -39,6 +40,12 @@ export default function Pregame() {
       MatchEventNames.PlayerLockedInSettings,
       handlePlayerLockedInSettingsEvent
     );
+
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (match.players.length >= minRequiredPlayers && e.key === 'Enter') {
+        onStartMatchButtonClick();
+      }
+    });
   }, []);
 
   return (

@@ -1,15 +1,16 @@
-import { useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { Ammo } from '../../../models/Ammo';
 import MatchProvider from '../../../services/MatchProvider/MatchProvider';
 
 interface AmmoRackProps {
+  selectedAmmo: Ammo | null;
   onAmmoSelect: (ammo: Ammo) => void;
 }
 
-export default function AmmoRack({ onAmmoSelect }: AmmoRackProps) {
-  const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(null);
-
+export default function AmmoRack({
+  selectedAmmo,
+  onAmmoSelect,
+}: AmmoRackProps) {
   const match = MatchProvider.Instance.match;
 
   return (
@@ -20,7 +21,6 @@ export default function AmmoRack({ onAmmoSelect }: AmmoRackProps) {
           key={index}
           onClick={() => {
             onAmmoSelect(ammo);
-            setSelectedAmmo(ammo);
           }}
         >
           {ammo.name}

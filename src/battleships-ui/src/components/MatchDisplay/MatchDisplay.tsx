@@ -47,13 +47,21 @@ export default function MatchDisplay() {
     match.players.find((player) => player.attackTurns.length > 0)!
   );
 
-  const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(null);
+  const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(
+    match.availableAmmoTypes[0]
+  );
 
   useEffect(() => {
     HubConnectionService.Instance.addSingular(
       MatchEventNames.AttackPerformed,
       handleAttackTurnEvent
     );
+
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        onAttack();
+      }
+    });
   }, []);
 
   return (
@@ -100,7 +108,7 @@ export default function MatchDisplay() {
           </div>
         </div>
 
-        <AmmoRack onAmmoSelect={onAmmoSelect} />
+        <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
 
         <div className="mt-3 d-flex justify-content-center">
           <Button
