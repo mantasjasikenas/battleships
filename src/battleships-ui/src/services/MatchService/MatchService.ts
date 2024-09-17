@@ -1,6 +1,7 @@
 import { Ammo, AmmoType } from '../../models/Ammo';
 import MatchMap from '../../models/MatchMap';
 import { GameMode } from '../../models/MatchSettings';
+import { PlayerTeam } from '../../models/Player';
 import {
   ClassicBattleship,
   ClassicCarrier,
@@ -29,20 +30,34 @@ import Ship from '../../models/Ships/Ship';
 import MatchProvider from '../MatchProvider/MatchProvider';
 
 export class MatchService {
+  static initMatchTeams(): void {
+    const match = MatchProvider.Instance.match;
+
+    match.players.sort((a, b) => a.id - b.id);
+
+    match.players.forEach((player, index) => {
+      player.team =
+        index % 2 === 0 ? PlayerTeam.FirstTeam : PlayerTeam.SecondTeam;
+    });
+
+    match.teamsMap.set(PlayerTeam.FirstTeam, new MatchMap());
+    match.teamsMap.set(PlayerTeam.SecondTeam, new MatchMap());
+  }
+
   static initMatchPlayerVehicles(): void {
     const match = MatchProvider.Instance.match;
 
-    match.players.forEach((player) => {
-      player.ships = this.getShipSet(match.settings.gameMode);
+    match.teamsMap.forEach((map) => {
+      const ships = this.getShipSet(match.settings.gameMode);
 
-      this.initPlayerShipsPlacement(player.map, player.ships);
+      this.initPlayerShipsPlacement(map, ships);
     });
   }
 
   static initMatchAvailableAmmo(): void {
     const match = MatchProvider.Instance.match;
 
-    if (match.settings.gameMode == GameMode.Ammo) {
+    if (match.settings.gameMode === GameMode.Ammo) {
       const standardAmmo = Ammo.map({
         name: 'Standard',
         damage: 3,

@@ -13,7 +13,7 @@ export default function AmmoRack({ onAmmoSelect }: AmmoRackProps) {
   const match = MatchProvider.Instance.match;
 
   return (
-    <div className="w-100 d-flex justify-content-center mt-3">
+    <div className="w-100 d-flex justify-content-center mt-3 gap-2">
       {match.availableAmmoTypes.map((ammo, index) => (
         <Button
           variant={selectedAmmo === ammo ? 'primary' : 'outline-primary'}

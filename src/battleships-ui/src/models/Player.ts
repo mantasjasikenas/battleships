@@ -5,17 +5,15 @@ import { AttackTurn } from './Turns/AttackTurn';
 import { MovementTurn } from './Turns/MovementTurn';
 
 export enum PlayerTeam {
-  Allies = 'Allies',
-  Enemy = 'Enemy',
+  FirstTeam = 'FirstTeam',
+  SecondTeam = 'SecondTeam',
 }
 
 export class Player {
   id: number;
   name: string;
   team: PlayerTeam;
-  ships: Ship[];
   airships: Airship[];
-  map: MatchMap;
   movementTurns: MovementTurn[] = [];
   attackTurns: AttackTurn[] = [];
   turnOverDraw = 0;
@@ -23,10 +21,8 @@ export class Player {
   constructor(object: Partial<Player>) {
     this.id = object.id ?? Math.round(Math.random() * 1000);
     this.name = object.name ?? 'New player';
-    this.team = !!object.team ? PlayerTeam[object.team] : PlayerTeam.Allies;
-    this.ships = object.ships ?? [];
+    this.team = !!object.team ? PlayerTeam[object.team] : PlayerTeam.FirstTeam;
     this.airships = object.airships ?? [];
-    this.map = new MatchMap();
     this.attackTurns = [];
   }
 
@@ -40,6 +36,8 @@ export class Player {
 
   public invertTeam() {
     this.team =
-      this.team === PlayerTeam.Allies ? PlayerTeam.Enemy : PlayerTeam.Allies;
+      this.team === PlayerTeam.FirstTeam
+        ? PlayerTeam.SecondTeam
+        : PlayerTeam.FirstTeam;
   }
 }

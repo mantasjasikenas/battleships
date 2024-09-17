@@ -70,7 +70,5 @@ export enum MatchEventNames {
   PlayerUpdatedMatchSettings,
   AttackPerformed,
   MatchStarted,
-  PlayerFirstTurnClaim,
-  ResolvedFirstTurnClaim,
   Message,
 }

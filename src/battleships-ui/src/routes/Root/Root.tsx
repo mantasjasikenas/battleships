@@ -9,7 +9,7 @@ export default function Root() {
       <div style={{ display: 'none' }}>
         <LoggerConfig />
       </div>
-      <div className="container mt-5 d-flex justify-content-center align-items-center">
+      <div className="mt-5 d-flex justify-content-center align-items-center">
         <Outlet />
       </div>
       <div style={{ display: 'none' }}>

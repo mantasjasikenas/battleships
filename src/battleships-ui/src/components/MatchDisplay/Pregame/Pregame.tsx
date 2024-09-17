@@ -12,20 +12,12 @@ import { MatchService } from '../../../services/MatchService/MatchService';
 import { PlayerService } from '../../../services/PlayerService/PlayerService';
 import MatchSettingsConfig from '../MatchSettings/MatchSettings';
 
-interface FirstTurnClaimProps {
-  playerId: number;
-  claimStrength: number;
-}
-export interface ResolvedFirstTurnClaimProps {
-  winnerPlayerId: number;
-}
+const minRequiredPlayers: number = 2;
 
 export default function Pregame() {
   const navigate = useNavigate();
 
   const match = useLoaderData() as Match;
-
-  let firstTurnClaimStrength: number;
 
   const [_, setRerenderToggle] = useState(0);
   const [readyPlayerIds, setReadyPlayerIds] = useState([] as number[]);
@@ -47,12 +39,6 @@ export default function Pregame() {
       MatchEventNames.PlayerLockedInSettings,
       handlePlayerLockedInSettingsEvent
     );
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.PlayerFirstTurnClaim,
-      handleFirstTurnClaimEvent
-    );
-
-    firstTurnClaimStrength = Math.random();
   }, []);
 
   return (
@@ -60,13 +46,13 @@ export default function Pregame() {
       <div className="container mb-5">
         <h1>{match.name}</h1>
         <h2>
-          {match.players?.length < 2
-            ? 'Waiting for the other player...'
-            : 'Waiting for both players to start the match...'}
+          {match.players?.length < minRequiredPlayers
+            ? 'Waiting for the other players...'
+            : 'Waiting for all players to start the match...'}
         </h2>
       </div>
 
-      {match.players.length === 2 && (
+      {match.players.length >= minRequiredPlayers && (
         <div>
           <div className="mb-5">
             <MatchSettingsConfig
@@ -78,11 +64,27 @@ export default function Pregame() {
               className="primary"
               onClick={() => onStartMatchButtonClick()}
             >
-              Start the match!
+              Start match
             </Button>
           </div>
         </div>
       )}
+
+      <div>
+        <h3>Joined Players</h3>
+        <ul>
+          {match.players.map((player) => (
+            <li key={player.id}>
+              {player.id} {player.name}{' '}
+              <input
+                type="checkbox"
+                checked={readyPlayerIds.some((id) => id === player.id)}
+                readOnly
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 
@@ -96,41 +98,28 @@ export default function Pregame() {
   }
 
   function handlePlayerJoinedEvent(data: any): void {
-    const player = new Player(data.player);
-
+    const newlyJoinedPlayer = new Player(data.player);
     const currentPlayer = PlayerService.getFromSessionStorage();
 
-    if (
-      match.players.length < 2 &&
-      !match.players.some((matchPlayer) => matchPlayer.id == player.id)
-    ) {
-      if (player.id === currentPlayer?.id) {
-        handleAddCurrentPlayer(player);
-      } else {
-        handleAddEnemyPlayer(player, currentPlayer);
+    const alreadyJoined = match.players.some(
+      (matchPlayer) => matchPlayer.id === newlyJoinedPlayer.id
+    );
+
+    if (!alreadyJoined) {
+      if (currentPlayer == null) {
+        PlayerService.saveToSessionStorage(newlyJoinedPlayer);
       }
-    }
-  }
 
-  function handleAddEnemyPlayer(enemyPlayer: Player, currentPlayer?: Player) {
-    enemyPlayer.invertTeam();
+      match.players.push(newlyJoinedPlayer);
 
-    match.players.push(enemyPlayer);
-
-    if (currentPlayer != null) {
-      HubConnectionService.Instance.sendEvent(
-        MatchEventNames.SecondPlayerJoinedConfirmation,
-        { player: currentPlayer }
-      );
+      if (currentPlayer != null) {
+        HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerJoined, {
+          player: currentPlayer,
+        });
+      }
     }
 
     setRerenderToggle(Math.random());
-  }
-
-  function handleAddCurrentPlayer(player: Player) {
-    match.players.push(player);
-
-    PlayerService.saveToSessionStorage(player);
   }
 
   function handleMatchSettingsChangedEvent(data: any): void {
@@ -149,63 +138,25 @@ export default function Pregame() {
       setReadyPlayerIds([...readyPlayerIds]);
 
       // check if length > 0 because value will change only after re-rendering
-      if (readyPlayerIds.length > 1 && match.isPregame) {
+      if (
+        readyPlayerIds.length === match.players.length &&
+        match.players.length >= minRequiredPlayers &&
+        match.isPregame
+      ) {
         match.isPregame = false;
 
+        MatchService.initMatchTeams();
         MatchService.initMatchPlayerVehicles();
         MatchService.initMatchAvailableAmmo();
 
         HubConnectionService.Instance.sendEvent(MatchEventNames.MatchStarted);
 
-        submitFirstTurnClaim();
+        const firstPlayer = match.players[0];
+        firstPlayer.attackTurns.push(new AttackTurn());
+
+        beginMatch();
       }
     }
-  }
-
-  function handleFirstTurnClaimEvent(eventData: any): void {
-    const data = eventData as FirstTurnClaimProps;
-
-    const currentPlayer = match.players.find(
-      (player) => player.team == PlayerTeam.Allies
-    )!;
-    const enemyPlayer = match.players.find(
-      (player) => player.team == PlayerTeam.Enemy
-    )!;
-
-    if (data.playerId != currentPlayer.id) {
-      const props: ResolvedFirstTurnClaimProps = { winnerPlayerId: -1 };
-
-      if (data.claimStrength > firstTurnClaimStrength) {
-        enemyPlayer.attackTurns.push(new AttackTurn());
-
-        props.winnerPlayerId = enemyPlayer.id;
-      } else {
-        currentPlayer.attackTurns.push(new AttackTurn());
-
-        props.winnerPlayerId = currentPlayer.id;
-      }
-
-      HubConnectionService.Instance.sendEvent(
-        MatchEventNames.ResolvedFirstTurnClaim,
-        props
-      );
-
-      beginMatch();
-    }
-  }
-
-  function submitFirstTurnClaim(): void {
-    const currentPlayer = PlayerService.getFromSessionStorage()!;
-
-    const data = {
-      playerId: currentPlayer?.id,
-      claimStrength: firstTurnClaimStrength,
-    } as FirstTurnClaimProps;
-
-    HubConnectionService.Instance.sendEvent(
-      MatchEventNames.PlayerFirstTurnClaim,
-      data
-    );
   }
 
   function beginMatch(): void {

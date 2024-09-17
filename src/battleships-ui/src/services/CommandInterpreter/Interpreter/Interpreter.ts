@@ -130,18 +130,22 @@ export class Interpreter implements IInterpreter {
     return (posX: number, posY: number, ammoType: AmmoType) => {
       const match = MatchProvider.Instance.match;
 
-      const player = match.players.find((p) => p.team === PlayerTeam.Allies)!;
-      const enemy = match.players.find((p) => p.team === PlayerTeam.Enemy)!;
+      const player = match.players.find(
+        (p) => p.team === PlayerTeam.FirstTeam
+      )!;
+      const enemy = match.players.find(
+        (p) => p.team === PlayerTeam.SecondTeam
+      )!;
 
       if (!player || !enemy) {
         return;
       }
 
-      const tile = enemy.map.tiles[posX][posY];
+     /*  const tile = enemy.map.tiles[posX][posY];
 
-      const data: AttackTurnEventProps = {
-        offencePlayerId: player.id,
-        defencePlayerId: enemy.id,
+      const data: any = {
+        offenceTeam: player.id,
+        defenceTeam: enemy.id,
         tile: tile,
         ammoType: ammoType,
       };
@@ -149,14 +153,14 @@ export class Interpreter implements IInterpreter {
       HubConnectionService.Instance.sendEvent(
         MatchEventNames.AttackPerformed,
         data
-      );
+      ); */
     };
   }
 
   private getEmoteCommandExecutable(): (emote: string) => void {
     return (emote: string) => {
       const player = MatchProvider.Instance.match.players.find(
-        (p) => p.team === PlayerTeam.Allies
+        (p) => p.team === PlayerTeam.FirstTeam
       )!;
 
       if (!player) {
@@ -175,7 +179,7 @@ export class Interpreter implements IInterpreter {
   private getMessageCommandExecutable(): (message: string) => void {
     return (message: string) => {
       const player = MatchProvider.Instance.match.players.find(
-        (p) => p.team === PlayerTeam.Allies
+        (p) => p.team === PlayerTeam.FirstTeam
       )!;
 
       if (!player) {

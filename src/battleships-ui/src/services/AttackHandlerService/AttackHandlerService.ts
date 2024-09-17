@@ -1,12 +1,13 @@
 import { Ammo, AmmoType } from '../../models/Ammo';
 import MatchMap, { MapTile } from '../../models/MatchMap';
+import { PlayerTeam } from '../../models/Player';
 import { ShipClass } from '../../models/Ships/ShipClass';
 import { ModularShipPart } from '../../models/Ships/ShipPart';
 import MatchProvider from '../MatchProvider/MatchProvider';
 
 export interface AttackTurnEventProps {
-  offencePlayerId: number;
-  defencePlayerId: number;
+  attackerId: number;
+  attackerTeam: PlayerTeam;
   tile: MapTile;
   ammoType: AmmoType;
 }

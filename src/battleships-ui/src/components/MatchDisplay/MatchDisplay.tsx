@@ -3,9 +3,7 @@ import { Button } from 'react-bootstrap';
 import { Ammo } from '../../models/Ammo';
 import { Match } from '../../models/Match';
 import { MapTile } from '../../models/MatchMap';
-import { GameMode } from '../../models/MatchSettings';
 import { PlayerTeam } from '../../models/Player';
-import { ModularShipPart } from '../../models/Ships/ShipPart';
 import {
   AttackHandlerService,
   AttackTurnEventProps,
@@ -18,18 +16,33 @@ import AmmoRack from './AmmoRack/AmmoRack';
 import MapGrid from './MapGrid/MapGrid';
 import { AttackTurn } from '../../models/Turns/AttackTurn';
 import { toast } from 'sonner';
+import { PlayerService } from '../../services/PlayerService/PlayerService';
 
 export default function MatchDisplay() {
   const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
 
   const match = MatchProvider.Instance.match;
+  const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
+  const currentPlayer = match.players.find(
+    (player) => player.id === currentPlayerId
+  )!;
 
-  const currentPlayerIdx = match.players[0].team === PlayerTeam.Allies ? 0 : 1;
-  const enemyPlayerIdx = Math.abs(currentPlayerIdx - 1);
+  const currentPlayerTeam = currentPlayer.team;
 
-  const currentPlayer = match.players[currentPlayerIdx];
-  const enemyPlayer = match.players[enemyPlayerIdx];
+  const alliesTeamPlayers = match.players.filter(
+    (player) => player.team === currentPlayerTeam
+  );
+  const enemiesTeamPlayers = match.players.filter(
+    (player) => player.team !== currentPlayerTeam
+  );
+
+  const enemiesTeamMap = match.teamsMap.get(
+    currentPlayerTeam === PlayerTeam.FirstTeam
+      ? PlayerTeam.SecondTeam
+      : PlayerTeam.FirstTeam
+  )!;
+  const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
 
   const [activePlayer, setActivePlayer] = useState(
     match.players.find((player) => player.attackTurns.length > 0)!
@@ -45,48 +58,52 @@ export default function MatchDisplay() {
   }, []);
 
   return (
-    <div className="container d-flex justify-content-center">
-      <div className="col-2">
-        <div>
-          {currentPlayer?.name} {currentPlayer?.id} {currentPlayer?.team}
-        </div>
-        {/* 
-        <div>
-          {currentPlayer?.ships.map((ship, indexShip) => (
-            <div key={indexShip}>
-              <span>{ship.constructor.name}</span>
-              <br />
-              {ship.parts.map((part, indexPart) => (
-                <span key={`${indexShip}-${indexPart}`}>
-                  {match.settings.gameMode === GameMode.Ammo
-                    ? (part as ModularShipPart).hp
-                    : 1}{' '}
-                </span>
-              ))}
-              <br />
-            </div>
-          ))}
-        </div>
-          */}
-      </div>
-      <div className="col-8">
+    <div className="w-100 d-flex justify-content-center">
+      <div className="w-100">
         <div className="w-100 d-flex  justify-content-center">{match.name}</div>
+
         <div className="w-100 d-flex justify-content-center gap-2">
           <MapGrid
-            player={currentPlayer}
+            isEnemyMap={false}
+            map={alliesTeamMap}
             title="Your map"
             selectedTile={selectedTile}
-            onTileSelect={onOwnTileSelect}
+            onTileSelect={onOwnTileSelect}  
           />
+
+          <div className="col-2">
+            <div>
+              {alliesTeamPlayers.map((player, index) => (
+                <div key={index}>
+                  {player.name} ID{player.id} {player.team}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="w-100 d-flex justify-content-center gap-2 mt-6">
           <MapGrid
+            isEnemyMap={true}
+            map={enemiesTeamMap}
             title="Enemy map"
-            player={enemyPlayer}
             selectedTile={selectedTile}
             onTileSelect={onAttackTurnTargetTileSelect}
           />
+          <div className="col-2">
+            <div>
+              {enemiesTeamPlayers.map((player, index) => (
+                <div key={index}>
+                  {player.name} ID{player.id} {player.team}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
         <AmmoRack onAmmoSelect={onAmmoSelect} />
-        <div className="w-100 mt-3 d-flex justify-content-center">
+
+        <div className="mt-3 d-flex justify-content-center">
           <Button
             size="lg"
             disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
@@ -97,34 +114,15 @@ export default function MatchDisplay() {
           </Button>
         </div>
 
-        <h3 className="w-100 d-flex justify-content-center mt-3">
+        <h3 className="d-flex justify-content-center mt-3">
           {activePlayer.id === currentPlayer.id
             ? 'Your turn!'
             : activePlayer.name + "'s turn!"}
         </h3>
-      </div>
-      <div className="col-2">
-        <div>
-          {enemyPlayer?.name} {enemyPlayer?.id} {enemyPlayer?.team}
-        </div>
-        {/* 
-        <div>
-          {enemyPlayer?.ships.map((ship, indexShip) => (
-            <div key={indexShip}>
-              <span>{ship.constructor.name}</span>
-              <br />
-              {ship.parts.map((part, indexPart) => (
-                <span key={`${indexShip}-${indexPart}`}>
-                  {match.settings.gameMode === GameMode.Ammo 
-                  //? 10 : 1}
-                  ? (part as ModularShipPart).hp : 1}{' '}
-                </span>
-              ))}
-              <br />
-            </div>
-          ))}
-        </div>
-         */}
+
+        <h4 className="d-flex justify-content-center mt-3">
+          You are {currentPlayer.name} ID{currentPlayer.id}
+        </h4>
       </div>
     </div>
   );
@@ -132,10 +130,10 @@ export default function MatchDisplay() {
   function onAmmoSelect(ammo: Ammo): void {
     setSelectedAmmo(ammo);
 
-    /* if (currentPlayer.attackTurns.length < 1) {
-      toast.error('Sorry, it is not your turn!');
+    if (currentPlayer.attackTurns.length < 1) {
+      toast.error('Sorry, you cannot select ammo now!');
       return;
-    } */
+    }
 
     currentPlayer.attackTurns[0].ammo = ammo;
   }
@@ -173,8 +171,8 @@ export default function MatchDisplay() {
     }
 
     HubConnectionService.Instance.sendEvent(MatchEventNames.AttackPerformed, {
-      offencePlayerId: currentPlayer.id,
-      defencePlayerId: enemyPlayer.id,
+      attackerId: currentPlayer.id,
+      attackerTeam: currentPlayer.team,
       tile: turn.tile,
       ammoType: turn.ammo.type,
     });
@@ -183,32 +181,41 @@ export default function MatchDisplay() {
   }
 
   function handleAttackTurnEvent(data: any): void {
-    const { offencePlayerId, defencePlayerId, tile, ammoType } =
+    const { attackerId, attackerTeam, tile, ammoType } =
       data as AttackTurnEventProps;
 
-    const defencePlayer = MatchProvider.getPlayer(defencePlayerId);
+    console.log(data);
 
-    const mapTile = defencePlayer!.map.tiles[tile.x][tile.y];
+    const attackedTeam =
+      attackerTeam === PlayerTeam.FirstTeam
+        ? PlayerTeam.SecondTeam
+        : PlayerTeam.FirstTeam;
+
+    const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
+    const mapTile = attackedTeamMap.tiles[tile.x][tile.y];
 
     const attackFunc = AttackHandlerService.getAttackByAmmo(
       ammoType,
       match.availableAmmoTypes
     );
 
-    attackFunc(mapTile, defencePlayer!.map);
+    attackFunc(mapTile, attackedTeamMap);
 
-    // switch active player and update attack turns
-    // find next player based on game players order
-    const currentPlayerIdx = match.players.findIndex(
-      (player) => player.id === offencePlayerId
+    switchTurn(attackerId);
+  }
+
+  function switchTurn(attackerId: number) {
+    const players = match.players.sort((a, b) => a.id - b.id);
+
+    // switch turn to next player
+    const currentPlayerIdx = players.findIndex(
+      (player) => player.id === attackerId
     );
 
-    const players = match.players;
-
-    // there shold more than 2 players. go to next player based on the  order of players
+    // find next player based on game players order
     const nextPlayerIdx =
       currentPlayerIdx + 1 < players.length ? currentPlayerIdx + 1 : 0;
-    const nextPlayer = match.players[nextPlayerIdx];
+    const nextPlayer = players[nextPlayerIdx];
 
     // if next player has no attack turns, give him one
     if (nextPlayer.attackTurns.length === 0) {
@@ -216,11 +223,10 @@ export default function MatchDisplay() {
     }
 
     // take turn from current player
-    const currentPlayer = match.players[currentPlayerIdx];
+    const currentPlayer = players[currentPlayerIdx];
     currentPlayer.attackTurns.shift();
 
     setActivePlayer(nextPlayer);
-
     rerender();
   }
 

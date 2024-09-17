@@ -12,7 +12,7 @@
 }
 
 .map-tile-hp-span {
-  position: fixed;
+  /* position: fixed; */
 }
 
 .map-tile.blue {
@@ -35,6 +35,6 @@
   background-color: lightcoral;
 }
 
-.map-tile:hover {
+.map-tile-hover:hover {
   background-color: green;
 }

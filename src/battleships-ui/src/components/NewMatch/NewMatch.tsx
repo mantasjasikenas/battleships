@@ -35,7 +35,7 @@ export default function NewMatch() {
   return (
     <div className="vh-100 d-flex justify-content-center align-items-center">
       <div className="container d-flex flex-column justify-content-center align-items-center">
-        <Form>
+        <Form onSubmit={handleClick}>
           <Form.Group className="mb-3 text-center">
             <Form.Control
               required

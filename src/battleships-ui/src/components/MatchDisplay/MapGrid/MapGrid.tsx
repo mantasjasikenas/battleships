@@ -1,13 +1,13 @@
 import classNames from 'classnames';
-import { MapTile } from '../../../models/MatchMap';
-import { Player, PlayerTeam } from '../../../models/Player';
+import MatchMap, { MapTile } from '../../../models/MatchMap';
 import { ModularShipPart } from '../../../models/Ships/ShipPart';
 
 import './MapGrid.css';
 import { TileColor } from '../../../models/Map/TileColors';
 
 interface MapGridProps {
-  player: Player;
+  isEnemyMap: boolean;
+  map: MatchMap;
   selectedTile: MapTile | null;
   title?: string;
   onTileSelect: (tile: MapTile) => void;
@@ -18,21 +18,21 @@ interface MapGridTileProps {
   onTileSelect: (tile: MapTile) => void;
   isEnemyMap: boolean;
   isSelected: boolean;
+  disableHover: boolean;
 }
 
 export default function MapGrid({
-  player,
+  isEnemyMap,
+  map,
   selectedTile,
   title,
   onTileSelect,
 }: MapGridProps) {
-  const isEnemyMap = player?.team === PlayerTeam.Enemy;
-
-  return player ? (
-    <div className="w-100 d-flex flex-column align-items-center">
+  return (
+    <div className="d-flex flex-column align-items-center">
       {title && <h4>{title}</h4>}
       <div>
-        {player.map.tiles.map((row, idxX) => (
+        {map.tiles.map((row, idxX) => (
           <div className="map-row" key={idxX}>
             {row.map((tile, idxY) => {
               return (
@@ -42,6 +42,7 @@ export default function MapGrid({
                   onTileSelect={onTileSelect}
                   isEnemyMap={isEnemyMap}
                   key={idxY}
+                  disableHover={!isEnemyMap}
                 />
               );
             })}
@@ -49,8 +50,6 @@ export default function MapGrid({
         ))}
       </div>
     </div>
-  ) : (
-    <div>Disconnected</div>
   );
 }
 
@@ -59,6 +58,7 @@ function MapGridTile({
   onTileSelect,
   isEnemyMap,
   isSelected,
+  disableHover,
 }: MapGridTileProps) {
   let shipPartHpString =
     tile.shipPart instanceof ModularShipPart && !isEnemyMap
@@ -67,7 +67,9 @@ function MapGridTile({
 
   return (
     <div
-      className={classNames('map-tile', getColor(tile))}
+      className={classNames('map-tile', getColor(tile), {
+        'map-tile-hover': !disableHover,
+      })}
       onClick={() => onTileSelect(tile)}
     >
       <span className="map-tile-hp-span">{shipPartHpString}</span>

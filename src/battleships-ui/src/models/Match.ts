@@ -1,11 +1,13 @@
 import { Ammo } from './Ammo';
+import MatchMap from './MatchMap';
 import MatchSettings from './MatchSettings';
-import { Player } from './Player';
+import { Player, PlayerTeam } from './Player';
 
 export class Match {
   name: string;
   isPregame: boolean;
   players: Player[];
+  teamsMap: Map<PlayerTeam, MatchMap> = new Map();
   settings: MatchSettings = new MatchSettings();
   availableAmmoTypes: Ammo[] = [];
 
