@@ -1,11 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import MatchDisplay, {
-  matchLoader,
-} from './components/MatchDisplay/MatchDisplay';
+import MatchDisplay from './components/MatchDisplay/MatchDisplay';
+import { matchLoader } from './services/MatchService/match-loader';
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import NewMatch from './components/NewMatch/NewMatch';
@@ -41,12 +40,9 @@ const router = createBrowserRouter([
   },
 ]);
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-root.render(
-  <React.StrictMode>
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
     <Toaster richColors position="top-center" duration={2000} />
     <RouterProvider router={router} />
-  </React.StrictMode>
+  </StrictMode>
 );

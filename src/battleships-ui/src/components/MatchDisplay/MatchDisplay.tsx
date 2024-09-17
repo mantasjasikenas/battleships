@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { Ammo } from '../../models/Ammo';
-import { Match } from '../../models/Match';
 import { MapTile } from '../../models/MatchMap';
 import { PlayerTeam } from '../../models/Player';
 import {
@@ -68,7 +67,7 @@ export default function MatchDisplay() {
             map={alliesTeamMap}
             title="Your map"
             selectedTile={selectedTile}
-            onTileSelect={onOwnTileSelect}  
+            onTileSelect={onOwnTileSelect}
           />
 
           <div className="col-2">
@@ -233,10 +232,4 @@ export default function MatchDisplay() {
   function rerender(): void {
     setRerenderToggle(Math.random() * 100);
   }
-}
-
-export function matchLoader(): Match {
-  const match = MatchProvider.Instance.match;
-
-  return match;
 }

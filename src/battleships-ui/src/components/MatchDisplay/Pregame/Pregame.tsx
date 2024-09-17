@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/esm/Button';
 import { useLoaderData, useNavigate } from 'react-router-dom';
 import { Match } from '../../../models/Match';
 import MatchSettings from '../../../models/MatchSettings';
-import { Player, PlayerTeam } from '../../../models/Player';
+import { Player } from '../../../models/Player';
 import { AttackTurn } from '../../../models/Turns/AttackTurn';
 import HubConnectionService, {
   MatchEventNames,

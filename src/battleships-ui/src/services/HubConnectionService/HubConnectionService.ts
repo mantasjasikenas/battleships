@@ -16,7 +16,7 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
     super();
 
     this._connection = new HubConnectionBuilder()
-      .withUrl(process.env.REACT_APP_BASE_URL + HUB_ENDPOINT_URL, {
+      .withUrl(import.meta.env.VITE_REACT_APP_BASE_URL + HUB_ENDPOINT_URL, {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
       })

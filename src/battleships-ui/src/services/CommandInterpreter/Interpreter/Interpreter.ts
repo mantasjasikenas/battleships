@@ -1,12 +1,10 @@
 import { AmmoType } from '../../../models/Ammo';
 import { Player, PlayerTeam } from '../../../models/Player';
-import { AttackTurnEventProps } from '../../AttackHandlerService/AttackHandlerService';
 import HubConnectionService, {
   MatchEventNames,
 } from '../../HubConnectionService/HubConnectionService';
 import MatchProvider from '../../MatchProvider/MatchProvider';
-
-const AsciiEmojiParser = require('ascii-emoji-parser');
+import AsciiEmojiParser  from 'ascii-emoji-parser';
 
 export interface CommsEventProps {
   player: Player;
@@ -141,7 +139,7 @@ export class Interpreter implements IInterpreter {
         return;
       }
 
-     /*  const tile = enemy.map.tiles[posX][posY];
+      /*  const tile = enemy.map.tiles[posX][posY];
 
       const data: any = {
         offenceTeam: player.id,
