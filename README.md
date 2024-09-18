@@ -38,7 +38,7 @@ Another game mode that differs from the classic rules is the *Fog of war* game m
 
 ## Class descriptions
 
-![image info](./res/class_diagram/model.png)
+![image info](./docs/class_diagram/model.png)
 
 **Display components classes**: *NewMatch, Pregame, MatchSettingsConfig, MatchDisplay*
 
@@ -107,7 +107,7 @@ Another game mode that differs from the classic rules is the *Fog of war* game m
 ### Frontend
 
 1. Navigate to `src/battleships-ui`
-1. Run `npm ci`
+1. Run `npm i`
 1. Run `npm start`
 1. Wait for a browser window with the client app to open
 
