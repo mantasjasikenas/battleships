@@ -1,8 +1,18 @@
-import Dropdown from 'react-bootstrap/esm/Dropdown';
-import MatchSettings, { GameMode } from '../../../models/MatchSettings';
+import { Label } from "@/components/ui/label";
+import MatchSettings, { GameMode } from "../../../models/MatchSettings";
 import HubConnectionService, {
   MatchEventNames,
-} from '../../../services/HubConnectionService/HubConnectionService';
+} from "../../../services/HubConnectionService/HubConnectionService";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 interface MatchSettingsProps {
   matchSettings: MatchSettings;
@@ -17,49 +27,41 @@ export default function MatchSettingsConfig(props: MatchSettingsProps) {
     onSettingsUpdate();
   }
 
-  function onUseDiceCheck(value: boolean) {
-    matchSettings.useDice = value;
-
-    onSettingsUpdate();
-  }
-
   function onSettingsUpdate() {
     HubConnectionService.Instance.sendEvent(
       MatchEventNames.PlayerUpdatedMatchSettings,
-      { matchSettings: matchSettings }
+      { matchSettings: matchSettings },
     );
   }
 
   return (
-    <div className="mb-2">
-      <div className="mb-2">
-        <b>Configure match settings</b>
-      </div>
-      <div className="mb-2">
-        <span>Game mode:</span>
-        <Dropdown>
-          <Dropdown.Toggle variant="success" id="dropdown-basic">
-            {matchSettings?.gameMode ?? 'Game mode'}
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu>
-            {Object.values(GameMode).map((mode) => (
-              <Dropdown.Item key={mode} onClick={() => onGameModeSelect(mode)}>
-                {mode}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-      </div>
-      <div className="mb-2">
-        <span>Use dice: </span>
-        <input
-          name="useDice"
-          type="checkbox"
-          checked={matchSettings.useDice}
-          onChange={(event) => onUseDiceCheck(event.target.checked)}
-        />
-      </div>
-    </div>
+    <>
+      <div className="mb-2 font-bold">Configure match settings</div>
+      <Card className="p-4">
+        <div className="flex flex-col gap-6">
+          <div>
+            <Label>Game mode</Label>
+            <Select
+              value={matchSettings.gameMode}
+              onValueChange={(value) => onGameModeSelect(value as GameMode)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select gamemode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Game modes</SelectLabel>
+                  {Object.values(GameMode).map((mode) => (
+                    <SelectItem key={mode} value={mode}>
+                      {mode}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+    </>
   );
 }

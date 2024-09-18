@@ -1,7 +1,7 @@
-import { Ammo, AmmoType } from '../../models/Ammo';
-import MatchMap from '../../models/MatchMap';
-import { GameMode } from '../../models/MatchSettings';
-import { PlayerTeam } from '../../models/Player';
+import { Ammo, AmmoType } from "../../models/Ammo";
+import MatchMap from "../../models/MatchMap";
+import { GameMode } from "../../models/MatchSettings";
+import { PlayerTeam } from "../../models/Player";
 import {
   ClassicBattleship,
   ClassicCarrier,
@@ -9,7 +9,7 @@ import {
   ClassicSpeedboat,
   ClassicSubmarine,
   IClassicShip,
-} from '../../models/Ships/ClassicShips';
+} from "../../models/Ships/ClassicShips";
 import {
   ModularCarrier,
   ModularBattleship,
@@ -17,7 +17,7 @@ import {
   ModularSubmarine,
   ModularSpeedboat,
   IModularShip,
-} from '../../models/Ships/ModularShips';
+} from "../../models/Ships/ModularShips";
 import {
   ObservingCarrier,
   ObservingBattleship,
@@ -25,9 +25,9 @@ import {
   ObservingSubmarine,
   ObservingSpeedboat,
   IObservingShip,
-} from '../../models/Ships/ObservingShips';
-import Ship from '../../models/Ships/Ship';
-import MatchProvider from '../MatchProvider/MatchProvider';
+} from "../../models/Ships/ObservingShips";
+import Ship from "../../models/Ships/Ship";
+import MatchProvider from "../MatchProvider/MatchProvider";
 
 export class MatchService {
   static initMatchTeams(): void {
@@ -40,8 +40,14 @@ export class MatchService {
         index % 2 === 0 ? PlayerTeam.FirstTeam : PlayerTeam.SecondTeam;
     });
 
-    match.teamsMap.set(PlayerTeam.FirstTeam, new MatchMap());
-    match.teamsMap.set(PlayerTeam.SecondTeam, new MatchMap());
+    match.teamsMap.set(
+      PlayerTeam.FirstTeam,
+      new MatchMap(match.mapSize, match.mapSize),
+    );
+    match.teamsMap.set(
+      PlayerTeam.SecondTeam,
+      new MatchMap(match.mapSize, match.mapSize),
+    );
   }
 
   static initMatchPlayerVehicles(): void {
@@ -59,28 +65,28 @@ export class MatchService {
 
     if (match.settings.gameMode === GameMode.Ammo) {
       const standardAmmo = Ammo.map({
-        name: 'Standard',
+        name: "Standard",
         damage: 3,
         impactRadius: 1,
         cooldown: 0,
         type: AmmoType.Standard,
       });
       const armorPiercingAmmo = Ammo.map({
-        name: 'Armor Piercing',
+        name: "Armor Piercing",
         damage: 10,
         impactRadius: 1,
         cooldown: 1,
         type: AmmoType.ArmorPiercing,
       });
       const highExplosiveAmmo = Ammo.map({
-        name: 'High Explosive',
+        name: "High Explosive",
         damage: 2,
         impactRadius: 2,
         cooldown: 0,
         type: AmmoType.HighExplosive,
       });
       const depthChargeAmmo = Ammo.map({
-        name: 'Depth Charge',
+        name: "Depth Charge",
         damage: 4,
         impactRadius: 2,
         cooldown: 0,
@@ -92,7 +98,7 @@ export class MatchService {
       match.availableAmmoTypes.push(depthChargeAmmo);
     } else {
       const classicAmmo = Ammo.map({
-        name: 'Classic',
+        name: "Classic",
         damage: 1,
         impactRadius: 1,
         cooldown: 0,

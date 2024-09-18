@@ -1,10 +1,9 @@
-import './CommandInput.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
+import "./CommandInput.css";
 
-import { Interpreter } from '../../services/CommandInterpreter/Interpreter/Interpreter';
-import { useEffect } from 'react';
+import { Interpreter } from "../../services/CommandInterpreter/Interpreter/Interpreter";
+import { useEffect } from "react";
 
-const INPUT_PROMPT_MESSAGE = 'Command:';
+const INPUT_PROMPT_MESSAGE = "Command:";
 
 export default function CommandInput() {
   let interpreter: Interpreter;

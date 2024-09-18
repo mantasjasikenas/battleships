@@ -1,9 +1,8 @@
-import classNames from 'classnames';
-import MatchMap, { MapTile } from '../../../models/MatchMap';
-import { ModularShipPart } from '../../../models/Ships/ShipPart';
-
-import './MapGrid.css';
-import { TileColor } from '../../../models/Map/TileColors';
+import classNames from "classnames";
+import MatchMap, { MapTile } from "../../../models/MatchMap";
+import { ModularShipPart } from "../../../models/Ships/ShipPart";
+import { TileColor } from "../../../models/Map/TileColors";
+import { cn } from "@/lib/utils";
 
 interface MapGridProps {
   isEnemyMap: boolean;
@@ -29,11 +28,11 @@ export default function MapGrid({
   onTileSelect,
 }: MapGridProps) {
   return (
-    <div className="d-flex flex-column align-items-center">
-      {title && <h4>{title}</h4>}
+    <div className="flex flex-col items-center">
+      {title && <h4 className="mb-2 text-lg font-semibold">{title}</h4>}
       <div>
         {map.tiles.map((row, idxX) => (
-          <div className="map-row" key={idxX}>
+          <div className="flex" key={idxX}>
             {row.map((tile, idxY) => {
               return (
                 <MapGridTile
@@ -63,31 +62,35 @@ function MapGridTile({
   let shipPartHpString =
     tile.shipPart instanceof ModularShipPart && !isEnemyMap
       ? (tile.shipPart as ModularShipPart).hp.toString()
-      : '';
+      : "";
 
   return (
     <div
-      className={classNames('map-tile', getColor(tile), {
-        'map-tile-hover': !disableHover,
-      })}
+      className={cn(
+        getColor(tile),
+        !disableHover && TileColor.Hover,
+        "h-[30px] w-[30px] border-[1px] border-solid",
+      )}
       onClick={() => onTileSelect(tile)}
     >
-      <span className="map-tile-hp-span">{shipPartHpString}</span>
+      <span className="map-tile-hp-span flex h-full w-full items-center justify-center">
+        {shipPartHpString}
+      </span>
     </div>
   );
 
   function getColor(tile: MapTile): string {
     if (isSelected) {
-      return TileColor.Grey;
+      return TileColor.Selected;
     }
     if (tile.isShipPartDestroyed) {
-      return TileColor.Red;
+      return TileColor.Destroyed;
     }
     if (tile.isAttacked) {
-      return tile.shipPart ? TileColor.LightCoral : TileColor.Yellow;
+      return tile.shipPart ? TileColor.Damaged : TileColor.Miss;
     }
     if (!isEnemyMap && tile.shipPart) {
-      return TileColor.Blue;
+      return TileColor.Ship;
     }
 
     return TileColor.Transparent;

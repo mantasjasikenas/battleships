@@ -1,21 +1,41 @@
-import { useRef } from 'react';
-import Button from 'react-bootstrap/esm/Button';
-import Form from 'react-bootstrap/esm/Form';
-import { generatePath, useNavigate } from 'react-router-dom';
+import { generatePath, useNavigate } from "react-router-dom";
 import HubConnectionService, {
   MatchEventNames,
-} from '../../services/HubConnectionService/HubConnectionService';
-import { PlayerService } from '../../services/PlayerService/PlayerService';
+} from "../../services/HubConnectionService/HubConnectionService";
+import { PlayerService } from "../../services/PlayerService/PlayerService";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+const FormSchema = z.object({
+  username: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
+  }),
+});
 
 export default function NewMatch() {
   const navigate = useNavigate();
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      username: "",
+    },
+  });
 
-  const handleClick = async () => {
-    const playerName = !!inputRef.current?.value
-      ? inputRef.current?.value
-      : 'New player';
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    const playerName = data.username;
 
     const player = PlayerService.createNew(playerName);
 
@@ -27,28 +47,35 @@ export default function NewMatch() {
 
     HubConnectionService.Instance.sendEvent(MatchEventNames.NewMatch);
 
-    const path = generatePath('match/pregame');
+    const path = generatePath("match/pregame");
 
     navigate(path);
-  };
+  }
 
   return (
-    <div className="vh-100 d-flex justify-content-center align-items-center">
-      <div className="container d-flex flex-column justify-content-center align-items-center">
-        <Form onSubmit={handleClick}>
-          <Form.Group className="mb-3 text-center">
-            <Form.Control
-              required
-              type="text"
-              placeholder="New player"
-              ref={inputRef}
-            />
-          </Form.Group>
-        </Form>
-        <Button className="primary" onClick={handleClick}>
-          Join a match!
-        </Button>
-      </div>
+    <div className="flex h-screen w-full flex-col items-center justify-center">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-80 space-y-6">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <div className="h-4 pt-1">
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-center pt-2">
+            <Button type="submit">Join a match!</Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

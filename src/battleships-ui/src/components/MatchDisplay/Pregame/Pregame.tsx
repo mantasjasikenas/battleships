@@ -1,17 +1,26 @@
-import { useEffect, useState } from 'react';
-import Button from 'react-bootstrap/esm/Button';
-import { useLoaderData, useNavigate } from 'react-router-dom';
-import { Match } from '../../../models/Match';
-import MatchSettings from '../../../models/MatchSettings';
-import { Player } from '../../../models/Player';
-import { AttackTurn } from '../../../models/Turns/AttackTurn';
+import { useEffect, useState } from "react";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import { Match } from "../../../models/Match";
+import MatchSettings from "../../../models/MatchSettings";
+import { Player } from "../../../models/Player";
+import { AttackTurn } from "../../../models/Turns/AttackTurn";
 import HubConnectionService, {
   MatchEventNames,
-} from '../../../services/HubConnectionService/HubConnectionService';
-import { MatchService } from '../../../services/MatchService/MatchService';
-import { PlayerService } from '../../../services/PlayerService/PlayerService';
-import MatchSettingsConfig from '../MatchSettings/MatchSettings';
-import { toast } from 'sonner';
+} from "../../../services/HubConnectionService/HubConnectionService";
+import { MatchService } from "../../../services/MatchService/MatchService";
+import { PlayerService } from "../../../services/PlayerService/PlayerService";
+import MatchSettingsConfig from "../MatchSettings/MatchSettings";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const minRequiredPlayers: number = 2;
 
@@ -26,72 +35,85 @@ export default function Pregame() {
   useEffect(() => {
     HubConnectionService.Instance.add(
       MatchEventNames.PlayerJoined,
-      handlePlayerJoinedEvent
+      handlePlayerJoinedEvent,
     );
     HubConnectionService.Instance.add(
       MatchEventNames.SecondPlayerJoinedConfirmation,
-      handlePlayerJoinedEvent
+      handlePlayerJoinedEvent,
     );
     HubConnectionService.Instance.add(
       MatchEventNames.PlayerUpdatedMatchSettings,
-      handleMatchSettingsChangedEvent
+      handleMatchSettingsChangedEvent,
     );
     HubConnectionService.Instance.add(
       MatchEventNames.PlayerLockedInSettings,
-      handlePlayerLockedInSettingsEvent
+      handlePlayerLockedInSettingsEvent,
     );
 
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (match.players.length >= minRequiredPlayers && e.key === 'Enter') {
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (match.players.length >= minRequiredPlayers && e.key === "Enter") {
         onStartMatchButtonClick();
       }
     });
   }, []);
 
   return (
-    <div className="container">
-      <div className="container mb-5">
-        <h1>{match.name}</h1>
-        <h2>
+    <div className="flex flex-col items-center">
+      <div className="mb-5 text-center">
+        <div className="text-3xl font-bold">{match.name}</div>
+        <div className="text-xl">
           {match.players?.length < minRequiredPlayers
-            ? 'Waiting for the other players...'
-            : 'Waiting for all players to start the match...'}
-        </h2>
+            ? "Waiting for the other players..."
+            : "Waiting for all players to start the match..."}
+        </div>
       </div>
 
       {match.players.length >= minRequiredPlayers && (
-        <div>
+        <div className="w-full">
           <div className="mb-5">
-            <MatchSettingsConfig
-              matchSettings={match.settings}
-            ></MatchSettingsConfig>
+            <MatchSettingsConfig matchSettings={match.settings} />
           </div>
-          <div className="mb-5">
+          <div className="mb-5 flex items-center justify-center">
             <Button
-              className="primary"
+              variant={"outline"}
+              className="px-4 py-2"
               onClick={() => onStartMatchButtonClick()}
             >
-              Start match
+              Ready to start
             </Button>
           </div>
         </div>
       )}
 
-      <div>
-        <h3>Joined Players</h3>
-        <ul>
-          {match.players.map((player) => (
-            <li key={player.id}>
-              {player.id} {player.name}{' '}
-              <input
-                type="checkbox"
-                checked={readyPlayerIds.some((id) => id === player.id)}
-                readOnly
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+      {match.players.length > 0 && (
+        <div className="w-full pt-6">
+          <div className="mb-2 font-bold">Joined players</div>
+          <Card className="p-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="">Id</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Ready</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {match.players.map((player) => (
+                  <TableRow key={player.id}>
+                    <TableCell className="font-medium">{player.id}</TableCell>
+                    <TableCell>{player.name}</TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={readyPlayerIds.some((id) => id === player.id)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </div>
+      )}
     </div>
   );
 
@@ -100,7 +122,7 @@ export default function Pregame() {
 
     HubConnectionService.Instance.sendEvent(
       MatchEventNames.PlayerLockedInSettings,
-      { player: currentPlayer }
+      { player: currentPlayer },
     );
   }
 
@@ -109,7 +131,7 @@ export default function Pregame() {
     const currentPlayer = PlayerService.getFromSessionStorage();
 
     const alreadyJoined = match.players.some(
-      (matchPlayer) => matchPlayer.id === newlyJoinedPlayer.id
+      (matchPlayer) => matchPlayer.id === newlyJoinedPlayer.id,
     );
 
     if (!alreadyJoined) {
@@ -167,6 +189,6 @@ export default function Pregame() {
   }
 
   function beginMatch(): void {
-    navigate('/match');
+    navigate("/match");
   }
 }
