@@ -2,10 +2,11 @@ import {
   HubConnectionBuilder,
   HttpTransportType,
   HubConnection,
-} from '@microsoft/signalr';
-import MatchEventsCallbackHandler from '../MatchEventsCallbackHandler/MatchEventsObserver/MatchEventsCallbackHandler';
+  LogLevel,
+} from "@microsoft/signalr";
+import MatchEventsCallbackHandler from "../MatchEventsCallbackHandler/MatchEventsObserver/MatchEventsCallbackHandler";
 
-const HUB_ENDPOINT_URL = 'match-event-hub/';
+const HUB_ENDPOINT_URL = "match-event-hub/";
 
 export default class HubConnectionService extends MatchEventsCallbackHandler {
   private _connection: HubConnection;
@@ -21,6 +22,7 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
         transport: HttpTransportType.WebSockets,
       })
       .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
       .build();
 
     this._connection.start();
@@ -29,7 +31,7 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
       await this.start();
     });
 
-    this._connection.on('ReceiveEvent', (event: MatchEventNames, data: any) => {
+    this._connection.on("ReceiveEvent", (event: MatchEventNames, data: any) => {
       this.notify(event, data);
     });
   }
@@ -46,7 +48,7 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
 
   private async handleSendEvent(event: MatchEventNames, data: any = {}) {
     try {
-      await this._connection.send('PropagateEvent', event, data);
+      await this._connection.send("PropagateEvent", event, data);
     } catch (err) {
       setTimeout(() => this.sendEvent(event, data), 1000);
     }

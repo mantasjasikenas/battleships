@@ -125,7 +125,7 @@ export default function MatchDisplay() {
     return (
       <div className="mt-4 flex items-center justify-center space-x-4 text-zinc-300">
         {legendItems.map((item) => (
-          <div className="flex items-center">
+          <div className="flex items-center" key={item.text}>
             <div className={cn("mr-2 h-4 w-4", item.color)}></div>
             <span>{item.text}</span>
           </div>

@@ -28,9 +28,11 @@ app.UseRouting();
 
 app.UseCors(corsPolicyName);
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.MapHub<MatchEventHub>("/match-event-hub");
+
+app.MapGet("/", () => "Welcome to Battleships API");
 
 app.MapControllers();
 
