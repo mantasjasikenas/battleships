@@ -102,7 +102,7 @@ Another game mode that differs from the classic rules is the *Fog of war* game m
 
 ## Quickstart guide
 
-**Prerequisites**: Node.JS v16, npm, Dotnet v6 installed
+**Prerequisites**: Node, npm, .NET installed
 
 ### Frontend
 
