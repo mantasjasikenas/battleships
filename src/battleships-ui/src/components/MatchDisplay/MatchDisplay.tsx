@@ -95,7 +95,7 @@ export default function MatchDisplay() {
                         player.id === currentPlayer.id && "font-bold underline",
                       )}
                     >
-                      <span className="inline-block w-6">{player.id}</span>
+                      <span className="w-6">{player.id}</span>
                       <span>{player.name}</span>
                     </span>
                     {player.id === activePlayer.id && (
@@ -123,7 +123,7 @@ export default function MatchDisplay() {
     ];
 
     return (
-      <div className="mt-4 flex items-center justify-center space-x-4 text-zinc-300">
+      <div className="mt-4 flex flex-wrap items-center justify-center space-x-4 text-zinc-300">
         {legendItems.map((item) => (
           <div className="flex items-center" key={item.text}>
             <div className={cn("mr-2 h-4 w-4", item.color)}></div>
@@ -141,7 +141,7 @@ export default function MatchDisplay() {
           {match.name}
         </div>
 
-        <div className="flex flex-row justify-center gap-8 pt-4">
+        <div className="flex flex-row flex-wrap justify-center gap-8 pt-4">
           <div className="flex flex-col items-start justify-end gap-6">
             {renderPlayersList(alliesTeamPlayers)}
 

@@ -17,7 +17,7 @@ export default function AmmoRack({
   return (
     <div className="mt-8 flex flex-col items-center gap-2">
       <Label className="font-bold">Ammo types</Label>
-      <div className="flex w-full justify-center gap-2">
+      <div className="flex w-full flex-wrap justify-center gap-2">
         {match.availableAmmoTypes.map((ammo, index) => (
           <Button
             variant={selectedAmmo === ammo ? "default" : "outline"}
