@@ -119,7 +119,7 @@ export default function MatchDisplay() {
       { color: TileColor.Ship, text: "Your Ships" },
       { color: TileColor.Miss, text: "Miss" },
       { color: TileColor.Destroyed, text: "Destroyed" },
-      { color: TileColor.Damaged, text: "Damaged" },
+      { color: TileColor.Damaged, text: "Hit" },
     ];
 
     return (

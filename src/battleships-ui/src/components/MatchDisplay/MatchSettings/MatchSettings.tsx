@@ -51,7 +51,7 @@ export default function MatchSettingsConfig(props: MatchSettingsProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Game modes</SelectLabel>
-                  {Object.values(GameMode).map((mode) => (
+                  {[GameMode.Classic, GameMode.Ammo].map((mode) => (
                     <SelectItem key={mode} value={mode}>
                       {mode}
                     </SelectItem>
