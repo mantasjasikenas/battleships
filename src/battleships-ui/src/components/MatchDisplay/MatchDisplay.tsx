@@ -20,10 +20,12 @@ import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "../ui/badge";
+import MatchTimer from "../MatchTimer";
 
 export default function MatchDisplay() {
   const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
+  const [gameOver, setGameOver] = useState(false);
 
   const match = MatchProvider.Instance.match;
   const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
@@ -134,6 +136,10 @@ export default function MatchDisplay() {
     );
   };
 
+   if (gameOver) {
+     return <div>Game Over!</div>;
+   }
+
   return (
     <div className="flex w-screen">
       <div className="flex w-full flex-col">
@@ -154,6 +160,8 @@ export default function MatchDisplay() {
             />
           </div>
 
+          <MatchTimer duration={match.duration} onTimeUp={onMatchTimerEnd} />
+
           <div className="flex flex-col items-end justify-end gap-6">
             {renderPlayersList(enemiesTeamPlayers)}
 
@@ -166,11 +174,8 @@ export default function MatchDisplay() {
             />
           </div>
         </div>
-
         {renderLegend()}
-
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
-
         <div className="mt-8 flex justify-center">
           <Button
             disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
@@ -287,6 +292,11 @@ export default function MatchDisplay() {
 
     setActivePlayer(nextPlayer);
     rerender();
+  }
+
+  function onMatchTimerEnd(): void {
+    toast.info("Time's up!");
+    setGameOver(true);
   }
 
   function rerender(): void {
