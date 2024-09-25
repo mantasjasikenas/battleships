@@ -32,4 +32,8 @@ export default class MatchEventsCallbackHandler {
       this.invokeables[event].push(new MatchEventsCallbackInvokeable(action));
     }
   }
+
+  public remove(event: MatchEventNames) {
+    this.invokeables[event] = [];
+  }
 }

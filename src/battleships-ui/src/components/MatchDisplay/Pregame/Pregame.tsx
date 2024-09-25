@@ -38,10 +38,6 @@ export default function Pregame() {
       handlePlayerJoinedEvent,
     );
     HubConnectionService.Instance.add(
-      MatchEventNames.SecondPlayerJoinedConfirmation,
-      handlePlayerJoinedEvent,
-    );
-    HubConnectionService.Instance.add(
       MatchEventNames.PlayerUpdatedMatchSettings,
       handleMatchSettingsChangedEvent,
     );
@@ -50,11 +46,25 @@ export default function Pregame() {
       handlePlayerLockedInSettingsEvent,
     );
 
-    document.addEventListener("keydown", (e: KeyboardEvent) => {
+    function handleKeyDown(e: KeyboardEvent) {
       if (match.players.length >= minRequiredPlayers && e.key === "Enter") {
         onStartMatchButtonClick();
       }
-    });
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+
+      HubConnectionService.Instance.remove(MatchEventNames.PlayerJoined);
+      HubConnectionService.Instance.remove(
+        MatchEventNames.PlayerUpdatedMatchSettings,
+      );
+      HubConnectionService.Instance.remove(
+        MatchEventNames.PlayerLockedInSettings,
+      );
+    };
   }, []);
 
   return (

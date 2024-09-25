@@ -1,28 +1,53 @@
-import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import React, { useState, useEffect, useRef } from "react";
 
 interface MatchTimerProps {
+  className?: string;
   duration: number;
   onTimeUp: () => void;
 }
 
-const MatchTimer: React.FC<MatchTimerProps> = ({ duration, onTimeUp }) => {
+const MatchTimer: React.FC<MatchTimerProps> = ({
+  className,
+  duration,
+  onTimeUp,
+}) => {
   const [remainingTime, setRemainingTime] = useState<number>(duration);
+  const endTimeRef = useRef<number>(Date.now() + duration * 1000);
 
   useEffect(() => {
-    if (remainingTime > 0) {
-      const timerId = setInterval(() => {
-        setRemainingTime((prevTime) => prevTime - 1);
-      }, 1000);
+    const updateRemainingTime = () => {
+      const now = Date.now();
+      const remaining = Math.max(
+        0,
+        Math.floor((endTimeRef.current - now) / 1000),
+      );
+      setRemainingTime(remaining);
 
-      return () => clearInterval(timerId);
-    } else {
-      onTimeUp();
-    }
-  }, [remainingTime, onTimeUp]);
+      if (remaining === 0) {
+        onTimeUp();
+        clearInterval(timerId);
+      }
+    };
+
+    const timerId = setInterval(updateRemainingTime, 1000);
+
+    updateRemainingTime();
+
+    return () => clearInterval(timerId);
+  }, [onTimeUp]);
 
   return (
-    <div className="w-[120px] text-center text-4xl font-bold leading-none">
-      {`${Math.floor(remainingTime / 60)}:${String(remainingTime % 60).padStart(2, "0")}`}
+    <div
+      className={cn(
+        "w-[120px] text-center text-4xl font-bold leading-none",
+        className,
+      )}
+    >
+      {`${Math.floor(remainingTime / 60)}:${String(remainingTime % 60).padStart(
+        2,
+        "0",
+      )}`}
     </div>
   );
 };

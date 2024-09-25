@@ -1,4 +1,5 @@
-import { Match } from '../../models/Match';
+import { PlayerTeam } from "@/models/Player";
+import { Match } from "../../models/Match";
 
 export default class MatchProvider {
   match: Match;
@@ -13,9 +14,21 @@ export default class MatchProvider {
     return this.Instance.match.players.find((player) => player.id === id);
   }
 
+  public static getTeamPlayers(team: PlayerTeam) {
+    return this.Instance.match.players.filter((player) => player.team === team);
+  }
+
+  public static getTeamMap(team: PlayerTeam) {
+    return this.Instance.match.teamsMap.get(team);
+  }
+
   public static get Instance(): MatchProvider {
     MatchProvider._instance ??= new MatchProvider();
 
     return MatchProvider._instance;
+  }
+
+  public static reset() {
+    MatchProvider._instance = new MatchProvider();
   }
 }

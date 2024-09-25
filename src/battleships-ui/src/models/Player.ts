@@ -1,12 +1,14 @@
 import { Airship } from './Airships/Airship';
-import MatchMap from './MatchMap';
-import Ship from './Ships/Ship';
 import { AttackTurn } from './Turns/AttackTurn';
 import { MovementTurn } from './Turns/MovementTurn';
 
 export enum PlayerTeam {
   FirstTeam = 'FirstTeam',
   SecondTeam = 'SecondTeam',
+}
+
+export function invertTeam(team: PlayerTeam): PlayerTeam {
+  return team === PlayerTeam.FirstTeam ? PlayerTeam.SecondTeam : PlayerTeam.FirstTeam;
 }
 
 export class Player {
