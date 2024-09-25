@@ -20,6 +20,7 @@ import MatchTimer from "../MatchTimer";
 import PlayerList from "./PlayerList";
 import GameLegend from "./GameLegend";
 import { useNavigate } from "react-router-dom";
+import { MatchService } from "@/services/MatchService/MatchService";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -68,19 +69,33 @@ export default function MatchDisplay() {
       handlePlayerGaveUpEvent,
     );
 
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.PlayerLeft,
+      handlePlayerLeftEvent,
+    );
+
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Enter") {
         onAttack();
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
+    function unloadCallback(_e: BeforeUnloadEvent) {
       HubConnectionService.Instance.remove(MatchEventNames.AttackPerformed);
       HubConnectionService.Instance.remove(MatchEventNames.PlayerGaveUp);
+      HubConnectionService.Instance.remove(MatchEventNames.PlayerLeft);
 
+      HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerLeft, {
+        playerId: currentPlayer.id,
+      });
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("beforeunload", unloadCallback);
+
+    return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeunload", unloadCallback);
     };
   }, []);
 
@@ -232,6 +247,16 @@ export default function MatchDisplay() {
       (player) => player.id === attackerId,
     );
 
+    // handle case when player left the match
+    if (currentPlayerIdx === -1) {
+      toast.error("Player left the match, switching turn to next player.");
+
+      players[0].attackTurns.push(new AttackTurn());
+      setActivePlayer(players[0]);
+
+      return;
+    }
+
     // find next player based on game players order
     const nextPlayerIdx =
       currentPlayerIdx + 1 < players.length ? currentPlayerIdx + 1 : 0;
@@ -247,7 +272,6 @@ export default function MatchDisplay() {
     currentPlayer.attackTurns.shift();
 
     setActivePlayer(nextPlayer);
-    rerender();
   }
 
   function rerender(): void {
@@ -304,6 +328,33 @@ export default function MatchDisplay() {
 
       return updatedGaveUpPlayers;
     });
+  }
+
+  function handlePlayerLeftEvent(data: any): void {
+    const { playerId } = data as { playerId: number };
+
+    const player = MatchProvider.getPlayer(playerId);
+
+    if (!player) {
+      console.error(`Player with ID ${playerId} not found.`);
+      return;
+    }
+
+    toast.success(`Player ${player.name} [${player.id}] left the match!`);
+
+    MatchService.removePlayerFromMatch(playerId);
+
+    if (activePlayer.id === playerId) {
+      switchTurn(playerId);
+    } else {
+      rerender();
+    }
+
+    const teamPlayers = MatchProvider.getTeamPlayers(player.team);
+
+    if (teamPlayers.length === 0) {
+      onGameOver(invertTeam(player.team));
+    }
   }
 
   function checkIfAllShipsDestroyed(attackedTeam: PlayerTeam): boolean {
