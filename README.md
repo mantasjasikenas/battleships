@@ -113,7 +113,7 @@ Another game mode that differs from the classic rules is the *Fog of war* game m
 
 ### Backend
 
-1. Navigate to `src/battleships-ui`
+1. Navigate to `src/battleships-api`
 1. Run `dotnet run`
 1. Wait for the program to compile and start
 
