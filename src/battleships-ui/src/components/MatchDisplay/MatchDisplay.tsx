@@ -52,6 +52,29 @@ export default function MatchDisplay() {
     match.availableAmmoTypes[0],
   );
 
+  const [turnRemainingTime, setTurnRemainingTime] = useState(60); // 60 seconds for each turn
+
+  useEffect(() => {
+    const turnEndTime = Date.now() + 60 * 1000; // 1 minute
+
+    const turnTimerId = setInterval(() => {
+      const remaining = Math.max(
+        0,
+        Math.floor((turnEndTime - Date.now()) / 1000),
+      );
+      setTurnRemainingTime(remaining);
+
+      if (remaining === 0) {
+        clearInterval(turnTimerId);
+        // Automatically switch turn when the time is up
+        switchTurn(activePlayer.id);
+        toast.error("Time's up!");
+      }
+    }, 1000);
+
+    return () => clearInterval(turnTimerId); // Cleanup on component unmount
+  }, [activePlayer]); // Reset the timer when the active player changes
+
   useEffect(() => {
     if (activePlayer.id === currentPlayer.id) {
       toast.success("It's your turn!", { id: "turn-toast" });
@@ -129,7 +152,13 @@ export default function MatchDisplay() {
             />
           </div>
 
-          <MatchTimer duration={match.duration} onTimeUp={onMatchTimerEnd} />
+          <div className="mt-4 flex flex-col items-center">
+            <MatchTimer duration={match.duration} onTimeUp={onMatchTimerEnd} />
+
+            <div className="mt-2 text-2xl tabular-nums">
+              {`${Math.floor(turnRemainingTime / 60)}:${String(turnRemainingTime % 60).padStart(2, "0")}`}
+            </div>
+          </div>
 
           <div className="flex flex-col items-end justify-end gap-6">
             <PlayerList
@@ -272,6 +301,7 @@ export default function MatchDisplay() {
     currentPlayer.attackTurns.shift();
 
     setActivePlayer(nextPlayer);
+    setTurnRemainingTime(60); // reset to 60 seconds for the next player's turn
   }
 
   function rerender(): void {
