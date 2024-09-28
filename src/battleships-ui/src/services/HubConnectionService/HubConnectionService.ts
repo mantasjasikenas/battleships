@@ -73,4 +73,5 @@ export enum MatchEventNames {
   AttackPerformed,
   MatchStarted,
   Message,
+  shipsPlaced,
 }

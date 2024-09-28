@@ -56,6 +56,7 @@ export class MatchService {
     match.teamsMap.forEach((map) => {
       const ships = this.getShipSet(match.settings.gameMode);
 
+
       this.initPlayerShipsPlacement(map, ships);
     });
   }
@@ -110,7 +111,7 @@ export class MatchService {
 
   private static initPlayerShipsPlacement(map: MatchMap, ships: Ship[]): void {
     ships.forEach((ship, index) => {
-      const rowIndex = index * 2;
+      const rowIndex = index*2;
 
       ship.parts.forEach((part, partIndex) => {
         map.tiles[rowIndex][partIndex].shipPart = part;
@@ -118,7 +119,7 @@ export class MatchService {
     });
   }
 
-  private static getShipSet(gameMode: GameMode): Ship[] {
+  static getShipSet(gameMode: GameMode): Ship[] {
     switch (gameMode) {
       case GameMode.Classic:
         return this.getClassicShipSet();
