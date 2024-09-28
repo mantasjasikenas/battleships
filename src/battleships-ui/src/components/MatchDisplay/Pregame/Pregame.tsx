@@ -21,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import MatchProvider from "@/services/MatchProvider/MatchProvider";
+import { toast } from "sonner";
 
 const minRequiredPlayers: number = 2;
 
@@ -32,13 +34,11 @@ export default function Pregame() {
   const [_, setRerenderToggle] = useState(0);
   const [readyPlayerIds, setReadyPlayerIds] = useState([] as number[]);
 
+  const currentPlayer = PlayerService.getFromSessionStorage()!;
+
   useEffect(() => {
     HubConnectionService.Instance.add(
       MatchEventNames.PlayerJoined,
-      handlePlayerJoinedEvent,
-    );
-    HubConnectionService.Instance.add(
-      MatchEventNames.SecondPlayerJoinedConfirmation,
       handlePlayerJoinedEvent,
     );
     HubConnectionService.Instance.add(
@@ -49,12 +49,39 @@ export default function Pregame() {
       MatchEventNames.PlayerLockedInSettings,
       handlePlayerLockedInSettingsEvent,
     );
+    HubConnectionService.Instance.add(
+      MatchEventNames.PlayerLeftLobby,
+      handlePlayerLeftLobbyEvent,
+    );
 
-    document.addEventListener("keydown", (e: KeyboardEvent) => {
+    function handleKeyDown(e: KeyboardEvent) {
       if (match.players.length >= minRequiredPlayers && e.key === "Enter") {
         onStartMatchButtonClick();
       }
-    });
+    }
+
+    function unloadCallback(_e: BeforeUnloadEvent) {
+      HubConnectionService.Instance.remove(MatchEventNames.PlayerJoined);
+      HubConnectionService.Instance.remove(
+        MatchEventNames.PlayerUpdatedMatchSettings,
+      );
+      HubConnectionService.Instance.remove(
+        MatchEventNames.PlayerLockedInSettings,
+      );
+      HubConnectionService.Instance.remove(MatchEventNames.PlayerLeftLobby);
+
+      HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerLeftLobby, {
+        playerId: currentPlayer.id,
+      });
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("beforeunload", unloadCallback);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeunload", unloadCallback);
+    };
   }, []);
 
   return (
@@ -148,7 +175,7 @@ export default function Pregame() {
       }
     }
 
-    setRerenderToggle(Math.random());
+    rerender();
   }
 
   function handleMatchSettingsChangedEvent(data: any): void {
@@ -156,7 +183,7 @@ export default function Pregame() {
 
     match.settings = data.matchSettings;
 
-    setRerenderToggle(Math.random());
+    rerender();
   }
 
   function handlePlayerLockedInSettingsEvent(data: any): void {
@@ -188,7 +215,27 @@ export default function Pregame() {
     }
   }
 
+  function handlePlayerLeftLobbyEvent(data: any): void {
+    const { playerId } = data as { playerId: number };
+
+    const player = MatchProvider.getPlayer(playerId);
+
+    if (!player) {
+      console.error(`Player with ID ${playerId} not found.`);
+      return;
+    }
+
+    toast.success(`Player ${player.name} [${player.id}] left the match!`);
+
+    MatchService.removePlayerFromMatch(playerId);
+    rerender();
+  }
+
   function beginMatch(): void {
     navigate("/match/ShipPlacement");
+  }
+
+  function rerender(): void {
+    setRerenderToggle(Math.random() * 100);
   }
 }

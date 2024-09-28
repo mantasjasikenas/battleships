@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
-import { Player, PlayerTeam } from "../../models/Player";
+import { invertTeam, PlayerTeam } from "../../models/Player";
 import {
   AttackHandlerService,
   AttackTurnEventProps,
@@ -16,36 +16,33 @@ import { AttackTurn } from "../../models/Turns/AttackTurn";
 import { toast } from "sonner";
 import { PlayerService } from "../../services/PlayerService/PlayerService";
 import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
-import { TileColor } from "@/models/Map/TileColors";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "../ui/badge";
+import MatchTimer from "../MatchTimer";
+import PlayerList from "./PlayerList";
+import GameLegend from "./GameLegend";
+import { useNavigate } from "react-router-dom";
+import { MatchService } from "@/services/MatchService/MatchService";
 
 export default function MatchDisplay() {
+  const navigate = useNavigate();
+
   const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
+  const [gameOver, setGameOver] = useState(false);
+  const [gaveUpPlayers, setGaveUpPlayers] = useState([] as number[]);
 
   const match = MatchProvider.Instance.match;
+
   const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
-  const currentPlayer = match.players.find(
-    (player) => player.id === currentPlayerId,
-  )!;
+  const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
 
   const currentPlayerTeam = currentPlayer.team;
+  const enemyTeam = invertTeam(currentPlayerTeam);
 
-  const alliesTeamPlayers = match.players.filter(
-    (player) => player.team === currentPlayerTeam,
-  );
-  const enemiesTeamPlayers = match.players.filter(
-    (player) => player.team !== currentPlayerTeam,
-  );
+  const alliesTeamPlayers = MatchProvider.getTeamPlayers(currentPlayerTeam);
+  const enemiesTeamPlayers = MatchProvider.getTeamPlayers(enemyTeam);
 
-  const enemiesTeamMap = match.teamsMap.get(
-    currentPlayerTeam === PlayerTeam.FirstTeam
-      ? PlayerTeam.SecondTeam
-      : PlayerTeam.FirstTeam,
-  )!;
   const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
+  const enemiesTeamMap = match.teamsMap.get(enemyTeam)!;
 
   const [activePlayer, setActivePlayer] = useState(
     match.players.find((player) => player.attackTurns.length > 0)!,
@@ -54,6 +51,29 @@ export default function MatchDisplay() {
   const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(
     match.availableAmmoTypes[0],
   );
+
+  const [turnRemainingTime, setTurnRemainingTime] = useState(60); // 60 seconds for each turn
+
+  useEffect(() => {
+    const turnEndTime = Date.now() + 60 * 1000; // 1 minute
+
+    const turnTimerId = setInterval(() => {
+      const remaining = Math.max(
+        0,
+        Math.floor((turnEndTime - Date.now()) / 1000),
+      );
+      setTurnRemainingTime(remaining);
+
+      if (remaining === 0) {
+        clearInterval(turnTimerId);
+        // Automatically switch turn when the time is up
+        switchTurn(activePlayer.id);
+        toast.error("Time's up!");
+      }
+    }, 1000);
+
+    return () => clearInterval(turnTimerId); // Cleanup on component unmount
+  }, [activePlayer]); // Reset the timer when the active player changes
 
   useEffect(() => {
     if (activePlayer.id === currentPlayer.id) {
@@ -67,72 +87,44 @@ export default function MatchDisplay() {
       handleAttackTurnEvent,
     );
 
-    document.addEventListener("keydown", (e: KeyboardEvent) => {
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.PlayerGaveUp,
+      handlePlayerGaveUpEvent,
+    );
+
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.PlayerLeft,
+      handlePlayerLeftEvent,
+    );
+
+    function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Enter") {
         onAttack();
       }
-    });
+    }
+
+    function unloadCallback(_e: BeforeUnloadEvent) {
+      HubConnectionService.Instance.remove(MatchEventNames.AttackPerformed);
+      HubConnectionService.Instance.remove(MatchEventNames.PlayerGaveUp);
+      HubConnectionService.Instance.remove(MatchEventNames.PlayerLeft);
+
+      HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerLeft, {
+        playerId: currentPlayer.id,
+      });
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("beforeunload", unloadCallback);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeunload", unloadCallback);
+    };
   }, []);
 
-  const renderPlayersList = (players: Player[]) => {
-    return (
-      <div className="flex space-x-4">
-        {[players].map((team, index) => (
-          <Card key={index} className="w-48">
-            <CardHeader>
-              <CardTitle className="text-sm">{team[0].team}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1">
-                {team.map((player) => (
-                  <li
-                    key={player.id}
-                    className="flex items-center justify-between text-xs"
-                  >
-                    <span
-                      className={cn(
-                        "flex items-center",
-                        player.id === currentPlayer.id && "font-bold underline",
-                      )}
-                    >
-                      <span className="w-6">{player.id}</span>
-                      <span>{player.name}</span>
-                    </span>
-                    {player.id === activePlayer.id && (
-                      <Badge variant="secondary" className="text-xs">
-                        {player.id === currentPlayer.id ? "Your turn" : "Turn"}
-                      </Badge>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  };
-
-  const renderLegend = () => {
-    const legendItems = [
-      { color: TileColor.Selected, text: "Selected" },
-      { color: TileColor.Ship, text: "Your Ships" },
-      { color: TileColor.Miss, text: "Miss" },
-      { color: TileColor.Destroyed, text: "Destroyed" },
-      { color: TileColor.Damaged, text: "Hit" },
-    ];
-
-    return (
-      <div className="mt-4 flex flex-wrap items-center justify-center space-x-4 text-zinc-300">
-        {legendItems.map((item) => (
-          <div className="flex items-center" key={item.text}>
-            <div className={cn("mr-2 h-4 w-4", item.color)}></div>
-            <span>{item.text}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  if (gameOver) {
+    return <div>Game Over!</div>;
+  }
 
   return (
     <div className="flex w-screen">
@@ -143,7 +135,13 @@ export default function MatchDisplay() {
 
         <div className="flex flex-row flex-wrap justify-center gap-8 pt-4">
           <div className="flex flex-col items-start justify-end gap-6">
-            {renderPlayersList(alliesTeamPlayers)}
+            <PlayerList
+              players={alliesTeamPlayers}
+              activePlayer={activePlayer}
+              currentPlayer={currentPlayer}
+              onGaveUp={onGaveUp}
+              gaveUpPlayers={gaveUpPlayers}
+            />
 
             <MapGrid
               isEnemyMap={false}
@@ -154,8 +152,21 @@ export default function MatchDisplay() {
             />
           </div>
 
+          <div className="mt-4 flex flex-col items-center">
+            <MatchTimer duration={match.duration} onTimeUp={onMatchTimerEnd} />
+
+            <div className="mt-2 text-2xl tabular-nums">
+              {`${Math.floor(turnRemainingTime / 60)}:${String(turnRemainingTime % 60).padStart(2, "0")}`}
+            </div>
+          </div>
+
           <div className="flex flex-col items-end justify-end gap-6">
-            {renderPlayersList(enemiesTeamPlayers)}
+            <PlayerList
+              players={enemiesTeamPlayers}
+              activePlayer={activePlayer}
+              currentPlayer={currentPlayer}
+              gaveUpPlayers={gaveUpPlayers}
+            />
 
             <MapGrid
               isEnemyMap={true}
@@ -167,7 +178,7 @@ export default function MatchDisplay() {
           </div>
         </div>
 
-        {renderLegend()}
+        <GameLegend />
 
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
 
@@ -186,12 +197,6 @@ export default function MatchDisplay() {
 
   function onAmmoSelect(ammo: Ammo): void {
     setSelectedAmmo(ammo);
-
-    if (currentPlayer.attackTurns.length < 1) {
-      toast.error("Sorry, you cannot select ammo now!");
-      return;
-    }
-
     currentPlayer.attackTurns[0].ammo = ammo;
   }
 
@@ -239,28 +244,28 @@ export default function MatchDisplay() {
     setSelectedTile(null);
   }
 
-  function handleAttackTurnEvent(data: any): void {
-    const { attackerId, attackerTeam, tile, ammoType } =
-      data as AttackTurnEventProps;
+  function onGaveUp(): void {
+    HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerGaveUp, {
+      playerId: currentPlayer.id,
+    });
+  }
 
-    console.log(data);
+  function onMatchTimerEnd(): void {
+    toast.info("Time's up!");
 
-    const attackedTeam =
-      attackerTeam === PlayerTeam.FirstTeam
-        ? PlayerTeam.SecondTeam
-        : PlayerTeam.FirstTeam;
+    const winningTeam = getWinningTeam();
 
-    const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
-    const mapTile = attackedTeamMap.tiles[tile.x][tile.y];
+    onGameOver(winningTeam!);
+  }
 
-    const attackFunc = AttackHandlerService.getAttackByAmmo(
-      ammoType,
-      match.availableAmmoTypes,
-    );
+  function onGameOver(winningTeam: PlayerTeam | null): void {
+    setGameOver(true);
 
-    attackFunc(mapTile, attackedTeamMap);
+    MatchProvider.reset();
 
-    switchTurn(attackerId);
+    navigate("/gameover", {
+      state: { winningTeam },
+    });
   }
 
   function switchTurn(attackerId: number) {
@@ -270,6 +275,16 @@ export default function MatchDisplay() {
     const currentPlayerIdx = players.findIndex(
       (player) => player.id === attackerId,
     );
+
+    // handle case when player left the match
+    if (currentPlayerIdx === -1) {
+      toast.error("Player left the match, switching turn to next player.");
+
+      players[0].attackTurns.push(new AttackTurn());
+      setActivePlayer(players[0]);
+
+      return;
+    }
 
     // find next player based on game players order
     const nextPlayerIdx =
@@ -286,10 +301,123 @@ export default function MatchDisplay() {
     currentPlayer.attackTurns.shift();
 
     setActivePlayer(nextPlayer);
-    rerender();
+    setTurnRemainingTime(60); // reset to 60 seconds for the next player's turn
   }
 
   function rerender(): void {
     setRerenderToggle(Math.random() * 100);
+  }
+
+  function handleAttackTurnEvent(data: any): void {
+    const { attackerId, attackerTeam, tile, ammoType } =
+      data as AttackTurnEventProps;
+
+    const attackedTeam = invertTeam(attackerTeam);
+
+    const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
+    const mapTile = attackedTeamMap.tiles[tile.x][tile.y];
+
+    const attackFunc = AttackHandlerService.getAttackByAmmo(
+      ammoType,
+      match.availableAmmoTypes,
+    );
+
+    attackFunc(mapTile, attackedTeamMap);
+
+    if (checkIfAllShipsDestroyed(attackedTeam)) {
+      toast.success("All ships are destroyed! Team " + attackedTeam + " lost!");
+      onGameOver(attackedTeam);
+    }
+
+    switchTurn(attackerId);
+  }
+
+  function handlePlayerGaveUpEvent(data: any): void {
+    const { playerId } = data as { playerId: number };
+
+    const player = MatchProvider.getPlayer(playerId);
+
+    if (!player) {
+      console.error(`Player with ID ${playerId} not found.`);
+      return;
+    }
+
+    toast.success(`Player ${player.name} gave up!`);
+
+    setGaveUpPlayers((prev) => {
+      const updatedGaveUpPlayers = [...prev, playerId];
+
+      const teamPlayers = MatchProvider.getTeamPlayers(player.team);
+      const teamGaveUp = teamPlayers.every((teamPlayer) =>
+        updatedGaveUpPlayers.includes(teamPlayer.id),
+      );
+
+      if (teamGaveUp) {
+        onGameOver(invertTeam(player.team));
+      }
+
+      return updatedGaveUpPlayers;
+    });
+  }
+
+  function handlePlayerLeftEvent(data: any): void {
+    const { playerId } = data as { playerId: number };
+
+    const player = MatchProvider.getPlayer(playerId);
+
+    if (!player) {
+      console.error(`Player with ID ${playerId} not found.`);
+      return;
+    }
+
+    toast.success(`Player ${player.name} [${player.id}] left the match!`);
+
+    MatchService.removePlayerFromMatch(playerId);
+
+    if (activePlayer.id === playerId) {
+      switchTurn(playerId);
+    } else {
+      rerender();
+    }
+
+    const teamPlayers = MatchProvider.getTeamPlayers(player.team);
+
+    if (teamPlayers.length === 0) {
+      onGameOver(invertTeam(player.team));
+    }
+  }
+
+  function checkIfAllShipsDestroyed(attackedTeam: PlayerTeam): boolean {
+    const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
+    const tiles = attackedTeamMap.tiles;
+
+    for (let row of tiles) {
+      for (let tile of row) {
+        if (tile.shipPart && !tile.isShipPartDestroyed) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  function getWinningTeam(): PlayerTeam | null {
+    const countDestroyedShips = (team: PlayerTeam) =>
+      match.teamsMap
+        .get(team)!
+        .tiles.flat()
+        .filter((tile) => tile.shipPart && tile.isShipPartDestroyed).length;
+
+    const firstTeamDestroyedShips = countDestroyedShips(PlayerTeam.FirstTeam);
+    const secondTeamDestroyedShips = countDestroyedShips(PlayerTeam.SecondTeam);
+
+    if (firstTeamDestroyedShips > secondTeamDestroyedShips) {
+      return PlayerTeam.SecondTeam;
+    } else if (secondTeamDestroyedShips > firstTeamDestroyedShips) {
+      return PlayerTeam.FirstTeam;
+    }
+
+    return null;
   }
 }

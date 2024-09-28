@@ -67,12 +67,12 @@ export enum MatchEventNames {
   NewMatch,
   MatchCreated,
   PlayerJoined,
-  SecondPlayerJoinedConfirmation,
   PlayerLockedInSettings,
   PlayerUpdatedMatchSettings,
   AttackPerformed,
   MatchStarted,
   Message,
+
   shipsPlaced,
   PlayerGaveUp,
   PlayerLeft,

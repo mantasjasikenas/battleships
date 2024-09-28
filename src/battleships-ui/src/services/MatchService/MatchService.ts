@@ -109,6 +109,12 @@ export class MatchService {
     }
   }
 
+  static removePlayerFromMatch(playerId: number): void {
+    const match = MatchProvider.Instance.match;
+
+    match.players = match.players.filter((player) => player.id !== playerId);
+  }
+
   private static initPlayerShipsPlacement(map: MatchMap, ships: Ship[]): void {
     ships.forEach((ship, index) => {
       const rowIndex = index*2;

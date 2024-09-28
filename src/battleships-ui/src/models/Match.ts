@@ -8,6 +8,7 @@ export class Match {
   isPregame: boolean;
   players: Player[];
   mapSize: number = 10;
+  duration: number = 600;
   teamsMap: Map<PlayerTeam, MatchMap> = new Map();
   settings: MatchSettings = new MatchSettings();
   availableAmmoTypes: Ammo[] = [];
@@ -20,5 +21,6 @@ export class Match {
     this.availableAmmoTypes = Ammo.mapList(object?.availableAmmoTypes);
     this.teamsMap = new Map<PlayerTeam, MatchMap>();
     this.mapSize = object?.mapSize ?? this.mapSize;
+    this.duration = object?.duration ?? this.duration;
   }
 }

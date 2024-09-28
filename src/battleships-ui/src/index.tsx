@@ -13,6 +13,7 @@ import ShipPlacement from "./components/MatchDisplay/ShipPlacement/ShipPlacement
 import { Toaster } from "sonner";
 import ErrorPage from "./routes/Error";
 import { ThemeProvider } from "./components/theme-provider";
+import GameOver from "./components/GameOver";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: "",
         element: <NewMatch />,
+      },
+      {
+        path: "gameover",
+        element: <GameOver />,
       },
       {
         path: "match",
