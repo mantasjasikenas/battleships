@@ -49,7 +49,7 @@ export default function NewMatch() {
 
     const path = generatePath("match/pregame");
 
-    navigate(path);
+    navigate(path, { replace: true });
   }
 
   return (
