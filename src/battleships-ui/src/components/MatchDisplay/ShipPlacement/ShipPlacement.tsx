@@ -16,11 +16,10 @@ import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 
 export default function ShipPlacement() {
-    
-    const navigate = useNavigate();
-    const [_, setRerenderToggle] = useState(0);
+  const navigate = useNavigate();
+  const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
-  
+
   const [selectedAlignment, setSelectedAlignment] = useState(0);
 
   const match = MatchProvider.Instance.match;
@@ -31,14 +30,12 @@ export default function ShipPlacement() {
   )!;
 
   const currentPlayerTeam = currentPlayer.team;
-  
 
   const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
 
-
   useEffect(() => {
     HubConnectionService.Instance.addSingular(
-      MatchEventNames.shipsPlaced,
+      MatchEventNames.ShipsPlaced,
       handlePlaceTurnEvent,
     );
 
@@ -76,7 +73,6 @@ export default function ShipPlacement() {
 
         <div className="flex flex-row flex-wrap justify-center gap-8 pt-4">
           <div className="flex flex-col items-start justify-end gap-6">
-
             <MapGrid
               isEnemyMap={false}
               map={alliesTeamMap}
@@ -90,100 +86,106 @@ export default function ShipPlacement() {
         {renderLegend()}
 
         <div className="mt-8 flex flex-col items-center gap-2">
-            <Label className="font-bold">Ship alignment</Label>
-            <div className="flex w-full flex-wrap justify-center gap-2">
+          <Label className="font-bold">Ship alignment</Label>
+          <div className="flex w-full flex-wrap justify-center gap-2">
             <Button
-            variant={selectedAlignment === 0 ? "default" : "outline"}
-            onClick={() => {
-              setSelectedAlignment(0);
-            }}
-          >Horizontally
-          </Button>
-          <Button
-            variant={selectedAlignment === 1 ? "default" : "outline"}
-            onClick={() => {
-              setSelectedAlignment(1);
-            }}
-          >Vertically
-          </Button>
-            </div>
+              variant={selectedAlignment === 0 ? "default" : "outline"}
+              onClick={() => {
+                setSelectedAlignment(0);
+              }}
+            >
+              Horizontally
+            </Button>
+            <Button
+              variant={selectedAlignment === 1 ? "default" : "outline"}
+              onClick={() => {
+                setSelectedAlignment(1);
+              }}
+            >
+              Vertically
+            </Button>
+          </div>
         </div>
 
         <div className="mt-8 flex justify-center">
-          <Button
-            disabled={!selectedTile}
-            onClick={() => onPlace()}
-          >
+          <Button disabled={!selectedTile} onClick={() => onPlace()}>
             Place
           </Button>
         </div>
-
-        
-        </div>
       </div>
+    </div>
   );
-
 
   function onOwnTileSelect(tile: MapTile): void {
     setSelectedTile(tile);
   }
 
-
   function onPlace(): void {
     setSelectedTile(null);
     if (!selectedTile) {
       toast.error("Select tile to place first!");
-    }
-    else if(alliesTeamMap.shipsPlaced === true){
-        toast.error("All ships have been placed, please wait for enemy team!");
-    }
-    else{
-        if(selectedAlignment === 0){
-            if(ships[currentPlayer.placedShips].parts.length + selectedTile.y > alliesTeamMap.tiles[0].length){
-                toast.error("Can't place ship out of bounds!");
-                return;
-            }
-            for(let i = 0; i < ships[currentPlayer.placedShips].parts.length; i++){
-                if(alliesTeamMap.tiles[selectedTile.x][selectedTile.y + i].shipPart !== undefined){
-                    toast.error("Can't place on other ships!");
-                    return;
-                }
-            }  
+    } else if (alliesTeamMap.shipsPlaced === true) {
+      toast.error("All ships have been placed, please wait for enemy team!");
+    } else {
+      if (selectedAlignment === 0) {
+        if (
+          ships[currentPlayer.placedShips].parts.length + selectedTile.y >
+          alliesTeamMap.tiles[0].length
+        ) {
+          toast.error("Can't place ship out of bounds!");
+          return;
         }
-    else{
-        if(ships[currentPlayer.placedShips].parts.length + selectedTile.x > alliesTeamMap.tiles.length){
-                toast.error("Can't place ship out of bounds!");
-                return;
+        for (
+          let i = 0;
+          i < ships[currentPlayer.placedShips].parts.length;
+          i++
+        ) {
+          if (
+            alliesTeamMap.tiles[selectedTile.x][selectedTile.y + i].shipPart !==
+            undefined
+          ) {
+            toast.error("Can't place on other ships!");
+            return;
+          }
         }
-        for(let i = 0; i < ships[currentPlayer.placedShips].parts.length; i++){
-            if(alliesTeamMap.tiles[selectedTile.x + i][selectedTile.y].shipPart !== undefined){
-                    toast.error("Can't place on other ships!");
-                    return;
-            }
+      } else {
+        if (
+          ships[currentPlayer.placedShips].parts.length + selectedTile.x >
+          alliesTeamMap.tiles.length
+        ) {
+          toast.error("Can't place ship out of bounds!");
+          return;
         }
-    }
-        HubConnectionService.Instance.sendEvent(MatchEventNames.shipsPlaced, {
-            placerId: currentPlayer.id,
-            placerTeam: currentPlayer.team,
-            tile: selectedTile,
-            alignment: selectedAlignment,
-          });
+        for (
+          let i = 0;
+          i < ships[currentPlayer.placedShips].parts.length;
+          i++
+        ) {
+          if (
+            alliesTeamMap.tiles[selectedTile.x + i][selectedTile.y].shipPart !==
+            undefined
+          ) {
+            toast.error("Can't place on other ships!");
+            return;
+          }
+        }
+      }
+      HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
+        placerId: currentPlayer.id,
+        placerTeam: currentPlayer.team,
+        tile: selectedTile,
+        alignment: selectedAlignment,
+      });
     }
     return;
-}
-    
-  
+  }
 
   function handlePlaceTurnEvent(data: any): void {
-    const { placerId, placerTeam, tile, alignment } =
-      data;
+    const { placerId, placerTeam, tile, alignment } = data;
 
     console.log(data);
 
-    const placer = match.players.find(
-        (player) => player.id === placerId,
-      )!;
-
+    const placer = match.players.find((player) => player.id === placerId)!;
 
     const currentMap = match.teamsMap.get(placerTeam)!;
 
@@ -194,25 +196,22 @@ export default function ShipPlacement() {
 
     const otherMap = match.teamsMap.get(otherTeam);
 
-        if(alignment === 0){
-            ships[placer.placedShips].parts.forEach((part, partIndex) => {
-                currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part 
-            })
-        }
-        else{
-            ships[placer.placedShips].parts.forEach((part, partIndex) => {
-                currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part 
-            })
-        }
-        placer.placedShips++;
-        if(placer.placedShips >= ships.length && otherMap?.shipsPlaced === true)
-        {
-            navigate("/match/");
-        }
-        else if(placer.placedShips >= ships.length){
-            currentMap.shipsPlaced = true;
-        }
-        rerender();
+    if (alignment === 0) {
+      ships[placer.placedShips].parts.forEach((part, partIndex) => {
+        currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
+      });
+    } else {
+      ships[placer.placedShips].parts.forEach((part, partIndex) => {
+        currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
+      });
+    }
+    placer.placedShips++;
+    if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
+      navigate("/match/");
+    } else if (placer.placedShips >= ships.length) {
+      currentMap.shipsPlaced = true;
+    }
+    rerender();
   }
 
   function rerender(): void {
