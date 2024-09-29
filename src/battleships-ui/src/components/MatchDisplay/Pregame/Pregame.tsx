@@ -202,7 +202,7 @@ export default function Pregame() {
         match.isPregame = false;
 
         MatchService.initMatchTeams();
-        MatchService.initMatchPlayerVehicles();
+        //MatchService.initMatchPlayerVehicles();
         MatchService.initMatchAvailableAmmo();
 
         HubConnectionService.Instance.sendEvent(MatchEventNames.MatchStarted);
@@ -232,7 +232,7 @@ export default function Pregame() {
   }
 
   function beginMatch(): void {
-    navigate("/match");
+    navigate("/match/ShipPlacement");
   }
 
   function rerender(): void {

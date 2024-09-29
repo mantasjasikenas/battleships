@@ -9,6 +9,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import NewMatch from "./components/NewMatch/NewMatch";
 import Root from "./routes/Root/Root";
 import Pregame from "./components/MatchDisplay/Pregame/Pregame";
+import ShipPlacement from "./components/MatchDisplay/ShipPlacement/ShipPlacement.tsx"
 import { Toaster } from "sonner";
 import ErrorPage from "./routes/Error";
 import { ThemeProvider } from "./components/theme-provider";
@@ -39,6 +40,11 @@ const router = createBrowserRouter([
           {
             path: "pregame",
             element: <Pregame />,
+            loader: matchLoader,
+          },
+          {
+            path: "ShipPlacement",
+            element: <ShipPlacement />,
             loader: matchLoader,
           },
         ],

@@ -72,6 +72,7 @@ export enum MatchEventNames {
   AttackPerformed,
   MatchStarted,
   Message,
+  ShipsPlaced,
   PlayerGaveUp,
   PlayerLeft,
   PlayerLeftLobby,

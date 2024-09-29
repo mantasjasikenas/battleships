@@ -2,11 +2,12 @@ import { ShipPart } from './Ships/ShipPart';
 import { TileColor } from './Map/TileColors';
 
 export default class MatchMap {
+  shipsPlaced: boolean;
   tiles: MapTile[][];
 
   constructor(sizeX = 10, sizeY = 10) {
     this.tiles = [];
-
+    this.shipsPlaced = false;
     for (let i = 0; i < sizeX; i++) {
       const row: MapTile[] = [];
       this.tiles.push(row);
