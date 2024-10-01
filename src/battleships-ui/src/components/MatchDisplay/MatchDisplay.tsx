@@ -21,6 +21,8 @@ import PlayerList from "./PlayerList";
 import GameLegend from "./GameLegend";
 import { useNavigate } from "react-router-dom";
 import { MatchService } from "@/services/MatchService/MatchService";
+import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
+import Scoreboard from "../Scoreboard";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -52,7 +54,14 @@ export default function MatchDisplay() {
     match.availableAmmoTypes[0],
   );
 
-  const [turnRemainingTime, setTurnRemainingTime] = useState(60); // 60 seconds for each turn
+  const [turnRemainingTime, setTurnRemainingTime] = useState(60);
+
+  const [alliesTeamStats, setAlliesTeamStats] = useState<TeamStats>(
+    new TeamStats(),
+  );
+  const [enemyTeamsStats, setEnemyTeamsStats] = useState<TeamStats>(
+    new TeamStats(),
+  );
 
   useEffect(() => {
     const turnEndTime = Date.now() + 60 * 1000; // 1 minute
@@ -152,11 +161,22 @@ export default function MatchDisplay() {
             />
           </div>
 
-          <div className="mt-4 flex flex-col items-center">
-            <MatchTimer duration={match.duration} onTimeUp={onMatchTimerEnd} />
+          <div className="flex flex-col items-center gap-8">
+            <div className="flex flex-col items-center">
+              <MatchTimer
+                duration={match.duration}
+                onTimeUp={onMatchTimerEnd}
+              />
+              <div className="mt-2 text-2xl tabular-nums">
+                {`${Math.floor(turnRemainingTime / 60)}:${String(turnRemainingTime % 60).padStart(2, "0")}`}
+              </div>
+            </div>
 
-            <div className="mt-2 text-2xl tabular-nums">
-              {`${Math.floor(turnRemainingTime / 60)}:${String(turnRemainingTime % 60).padStart(2, "0")}`}
+            <div className="mb-auto">
+              <Scoreboard
+                alliesTeamStats={alliesTeamStats}
+                enemyTeamStats={enemyTeamsStats}
+              />
             </div>
           </div>
 
@@ -323,6 +343,12 @@ export default function MatchDisplay() {
     );
 
     attackFunc(mapTile, attackedTeamMap);
+
+    if (attackerTeam === currentPlayerTeam) {
+      setAlliesTeamStats((_prev) => calculateTeamStats(enemiesTeamMap));
+    } else {
+      setEnemyTeamsStats((_prev) => calculateTeamStats(alliesTeamMap));
+    }
 
     if (checkIfAllShipsDestroyed(attackedTeam)) {
       toast.success("All ships are destroyed! Team " + attackedTeam + " lost!");

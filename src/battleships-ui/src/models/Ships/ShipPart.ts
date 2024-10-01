@@ -1,4 +1,4 @@
-import { ShipClass } from './ShipClass';
+import { ShipClass } from "./ShipClass";
 
 export abstract class ShipPart {
   constructor(shipClass: ShipClass) {
@@ -12,7 +12,9 @@ export abstract class ShipPart {
 export class ClassicShipPart extends ShipPart {}
 
 export class ModularShipPart extends ShipPart {
-  hp = 10;
+  readonly initialHp = 10;
+
+  hp = this.initialHp;
 }
 
 export class ObservingShipPart extends ShipPart {
