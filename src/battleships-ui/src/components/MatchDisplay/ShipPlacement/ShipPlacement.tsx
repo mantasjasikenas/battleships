@@ -38,12 +38,6 @@ export default function ShipPlacement() {
       MatchEventNames.ShipsPlaced,
       handlePlaceTurnEvent,
     );
-
-    document.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        onPlace();
-      }
-    });
   }, []);
 
   const renderLegend = () => {
@@ -107,9 +101,12 @@ export default function ShipPlacement() {
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center gap-2">
           <Button disabled={!selectedTile} onClick={() => onPlace()}>
             Place
+          </Button>
+          <Button onClick={() => onRandom()}>
+            Place randomly
           </Button>
         </div>
       </div>
@@ -118,6 +115,66 @@ export default function ShipPlacement() {
 
   function onOwnTileSelect(tile: MapTile): void {
     setSelectedTile(tile);
+  }
+
+  function onRandom(): void {
+    let validNr = currentPlayer.placedShips;
+    for(let i = 0; i < 100; i++){
+      if(validNr >= ships.length){
+        toast.success("All ships placed");
+        return;
+      }
+        let coversShip = false;
+        let x = Math.floor(Math.random() * (alliesTeamMap.tiles.length - 0)) + 0;
+        let y = Math.floor(Math.random() * (alliesTeamMap.tiles[0].length - 0)) + 0;
+        let a = Math.floor(Math.random() * (2 - 0)) + 0;
+        console.log(x, y, a, currentPlayer.placedShips, coversShip);
+      if (a === 0) {
+        if (
+          ships[validNr].parts.length + y >
+          alliesTeamMap.tiles[0].length
+        ) {
+          continue;
+        }
+        for (let i = 0; i < ships[validNr].parts.length; i++) {
+          if (alliesTeamMap.tiles[x][y + i].shipPart !== undefined) {
+            coversShip = true;
+            break;
+          }
+        }
+        if(coversShip) continue;
+        ships[validNr].parts.forEach((part, partIndex) => {
+          alliesTeamMap.tiles[x][y + partIndex].shipPart = part;
+        });
+      } else {
+        if (
+          ships[validNr].parts.length + x >
+          alliesTeamMap.tiles.length
+        ) {
+          continue;
+        }
+        for (let i = 0; i < ships[validNr].parts.length; i++) {
+          if (alliesTeamMap.tiles[x + i][y].shipPart !== undefined) {
+            coversShip = true;
+            break;
+          }
+        }
+        if(coversShip) continue;
+        ships[validNr].parts.forEach((part, partIndex) => {
+          alliesTeamMap.tiles[x + partIndex][y].shipPart = part;
+        });
+      }
+      validNr++;
+      HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
+        placerId: currentPlayer.id,
+        placerTeam: currentPlayer.team,
+        tile: new MapTile(x, y),
+        alignment: a,
+      });
+      
+    }
+    toast.error("All ships could not be placed");
+    return;
   }
 
   function onPlace(): void {
