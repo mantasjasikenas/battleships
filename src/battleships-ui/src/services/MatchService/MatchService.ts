@@ -1,9 +1,13 @@
-import { Ammo, AmmoType } from "../../models/Ammo";
 import MatchMap from "../../models/MatchMap";
 import { GameMode } from "../../models/MatchSettings";
 import { PlayerTeam } from "../../models/Player";
 import Ship from "../../models/Ships/Ship";
 import MatchProvider from "../MatchProvider/MatchProvider";
+import {
+  AmmoFactory,
+  AmmoGameModeFactory,
+  ClassicGameModeFactory,
+} from "./AmmoFactory";
 import {
   IShipFactory,
   ClassicShipFactory,
@@ -44,50 +48,15 @@ export class MatchService {
 
   static initMatchAvailableAmmo(): void {
     const match = MatchProvider.Instance.match;
+    let ammoFactory: AmmoFactory;
 
     if (match.settings.gameMode === GameMode.Ammo) {
-      const standardAmmo = Ammo.map({
-        name: "Standard",
-        damage: 3,
-        impactRadius: 1,
-        cooldown: 0,
-        type: AmmoType.Standard,
-      });
-      const armorPiercingAmmo = Ammo.map({
-        name: "Armor Piercing",
-        damage: 10,
-        impactRadius: 1,
-        cooldown: 1,
-        type: AmmoType.ArmorPiercing,
-      });
-      const highExplosiveAmmo = Ammo.map({
-        name: "High Explosive",
-        damage: 2,
-        impactRadius: 2,
-        cooldown: 0,
-        type: AmmoType.HighExplosive,
-      });
-      const depthChargeAmmo = Ammo.map({
-        name: "Depth Charge",
-        damage: 4,
-        impactRadius: 2,
-        cooldown: 0,
-        type: AmmoType.DepthCharge,
-      });
-      match.availableAmmoTypes.push(standardAmmo);
-      match.availableAmmoTypes.push(armorPiercingAmmo);
-      match.availableAmmoTypes.push(highExplosiveAmmo);
-      match.availableAmmoTypes.push(depthChargeAmmo);
+      ammoFactory = new AmmoGameModeFactory();
     } else {
-      const classicAmmo = Ammo.map({
-        name: "Classic",
-        damage: 1,
-        impactRadius: 1,
-        cooldown: 0,
-        type: AmmoType.Classic,
-      });
-      match.availableAmmoTypes.push(classicAmmo);
+      ammoFactory = new ClassicGameModeFactory();
     }
+
+    match.availableAmmoTypes = ammoFactory.createAmmo();
   }
 
   static removePlayerFromMatch(playerId: number): void {

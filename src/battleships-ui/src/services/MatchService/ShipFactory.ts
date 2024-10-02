@@ -24,42 +24,93 @@ import {
   IObservingShip,
 } from "../../models/Ships/ObservingShips";
 
+// DESIGN PATTERN: Abstract Factory
 export interface IShipFactory {
+  createCarrier(): Ship;
+  createBattleship(): Ship;
+  createCruiser(): Ship;
+  createSubmarine(): Ship;
+  createSpeedboat(): Ship;
   createShips(): Ship[];
 }
 
 export class ClassicShipFactory implements IShipFactory {
-  createShips(): IClassicShip[] {
+  createCarrier(): IClassicShip {
+    return new ClassicCarrier();
+  }
+  createBattleship(): IClassicShip {
+    return new ClassicBattleship();
+  }
+  createCruiser(): IClassicShip {
+    return new ClassicCruiser();
+  }
+  createSubmarine(): IClassicShip {
+    return new ClassicSubmarine();
+  }
+  createSpeedboat(): IClassicShip {
+    return new ClassicSpeedboat();
+  }
+  createShips(): Ship[] {
     return [
-      new ClassicCarrier(),
-      new ClassicBattleship(),
-      new ClassicCruiser(),
-      new ClassicSubmarine(),
-      new ClassicSpeedboat(),
+      this.createCarrier(),
+      this.createBattleship(),
+      this.createCruiser(),
+      this.createSubmarine(),
+      this.createSpeedboat(),
     ];
   }
 }
 
 export class ModularShipFactory implements IShipFactory {
-  createShips(): IModularShip[] {
+  createCarrier(): IModularShip {
+    return new ModularCarrier();
+  }
+  createBattleship(): IModularShip {
+    return new ModularBattleship();
+  }
+  createCruiser(): IModularShip {
+    return new ModularCruiser();
+  }
+  createSubmarine(): IModularShip {
+    return new ModularSubmarine();
+  }
+  createSpeedboat(): IModularShip {
+    return new ModularSpeedboat();
+  }
+  createShips(): Ship[] {
     return [
-      new ModularCarrier(),
-      new ModularBattleship(),
-      new ModularCruiser(),
-      new ModularSubmarine(),
-      new ModularSpeedboat(),
+      this.createCarrier(),
+      this.createBattleship(),
+      this.createCruiser(),
+      this.createSubmarine(),
+      this.createSpeedboat(),
     ];
   }
 }
 
 export class ObservingShipFactory implements IShipFactory {
-  createShips(): IObservingShip[] {
+  createCarrier(): IObservingShip {
+    return new ObservingCarrier();
+  }
+  createBattleship(): IObservingShip {
+    return new ObservingBattleship();
+  }
+  createCruiser(): IObservingShip {
+    return new ObservingCruiser();
+  }
+  createSubmarine(): IObservingShip {
+    return new ObservingSubmarine();
+  }
+  createSpeedboat(): IObservingShip {
+    return new ObservingSpeedboat();
+  }
+  createShips(): Ship[] {
     return [
-      new ObservingCarrier(),
-      new ObservingBattleship(),
-      new ObservingCruiser(),
-      new ObservingSubmarine(),
-      new ObservingSpeedboat(),
+      this.createCarrier(),
+      this.createBattleship(),
+      this.createCruiser(),
+      this.createSubmarine(),
+      this.createSpeedboat(),
     ];
   }
 }

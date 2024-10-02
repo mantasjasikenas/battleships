@@ -1,6 +1,7 @@
 import { PlayerTeam } from "@/models/Player";
 import { Match } from "../../models/Match";
 
+// DESIGN PATTERN: Singleton
 export default class MatchProvider {
   match: Match;
 

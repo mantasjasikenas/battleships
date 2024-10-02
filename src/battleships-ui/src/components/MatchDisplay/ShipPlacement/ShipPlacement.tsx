@@ -253,8 +253,6 @@ export default function ShipPlacement() {
   function handlePlaceTurnEvent(data: any): void {
     const { placerId, placerTeam, tile, alignment } = data;
 
-    console.log(data);
-
     const placer = match.players.find((player) => player.id === placerId)!;
 
     const currentMap = match.teamsMap.get(placerTeam)!;
