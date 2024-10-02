@@ -23,7 +23,10 @@ export default function ShipPlacement() {
   const [selectedAlignment, setSelectedAlignment] = useState(0);
 
   const match = MatchProvider.Instance.match;
-  const ships = MatchService.getShipSet(match.settings.gameMode);
+
+  const shipsFactory = MatchService.getShipFactory(match.settings.gameMode);
+  const ships = shipsFactory.createShips();
+
   const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
   const currentPlayer = match.players.find(
     (player) => player.id === currentPlayerId,

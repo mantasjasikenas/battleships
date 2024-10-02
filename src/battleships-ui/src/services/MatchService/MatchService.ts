@@ -2,32 +2,14 @@ import { Ammo, AmmoType } from "../../models/Ammo";
 import MatchMap from "../../models/MatchMap";
 import { GameMode } from "../../models/MatchSettings";
 import { PlayerTeam } from "../../models/Player";
-import {
-  ClassicBattleship,
-  ClassicCarrier,
-  ClassicCruiser,
-  ClassicSpeedboat,
-  ClassicSubmarine,
-  IClassicShip,
-} from "../../models/Ships/ClassicShips";
-import {
-  ModularCarrier,
-  ModularBattleship,
-  ModularCruiser,
-  ModularSubmarine,
-  ModularSpeedboat,
-  IModularShip,
-} from "../../models/Ships/ModularShips";
-import {
-  ObservingCarrier,
-  ObservingBattleship,
-  ObservingCruiser,
-  ObservingSubmarine,
-  ObservingSpeedboat,
-  IObservingShip,
-} from "../../models/Ships/ObservingShips";
 import Ship from "../../models/Ships/Ship";
 import MatchProvider from "../MatchProvider/MatchProvider";
+import {
+  IShipFactory,
+  ClassicShipFactory,
+  ModularShipFactory,
+  ObservingShipFactory,
+} from "./ShipFactory";
 
 export class MatchService {
   static initMatchTeams(): void {
@@ -52,11 +34,10 @@ export class MatchService {
 
   static initMatchPlayerVehicles(): void {
     const match = MatchProvider.Instance.match;
+    const shipFactory = this.getShipFactory(match.settings.gameMode);
 
     match.teamsMap.forEach((map) => {
-      const ships = this.getShipSet(match.settings.gameMode);
-
-
+      const ships = shipFactory.createShips();
       this.initPlayerShipsPlacement(map, ships);
     });
   }
@@ -115,54 +96,26 @@ export class MatchService {
     match.players = match.players.filter((player) => player.id !== playerId);
   }
 
+  static getShipFactory(gameMode: GameMode): IShipFactory {
+    switch (gameMode) {
+      case GameMode.Classic:
+        return new ClassicShipFactory();
+      case GameMode.Ammo:
+        return new ModularShipFactory();
+      case GameMode.FogOfWar:
+        return new ObservingShipFactory();
+      default:
+        throw new Error("Unsupported game mode");
+    }
+  }
+
   private static initPlayerShipsPlacement(map: MatchMap, ships: Ship[]): void {
     ships.forEach((ship, index) => {
-      const rowIndex = index*2;
+      const rowIndex = index * 2;
 
       ship.parts.forEach((part, partIndex) => {
         map.tiles[rowIndex][partIndex].shipPart = part;
       });
     });
-  }
-
-  static getShipSet(gameMode: GameMode): Ship[] {
-    switch (gameMode) {
-      case GameMode.Classic:
-        return this.getClassicShipSet();
-      case GameMode.Ammo:
-        return this.getModularShipSet();
-      case GameMode.FogOfWar:
-        return this.getObservingShipSet();
-    }
-  }
-
-  private static getClassicShipSet(): IClassicShip[] {
-    return [
-      new ClassicCarrier(),
-      new ClassicBattleship(),
-      new ClassicCruiser(),
-      new ClassicSubmarine(),
-      new ClassicSpeedboat(),
-    ];
-  }
-
-  private static getModularShipSet(): IModularShip[] {
-    return [
-      new ModularCarrier(),
-      new ModularBattleship(),
-      new ModularCruiser(),
-      new ModularSubmarine(),
-      new ModularSpeedboat(),
-    ];
-  }
-
-  private static getObservingShipSet(): IObservingShip[] {
-    return [
-      new ObservingCarrier(),
-      new ObservingBattleship(),
-      new ObservingCruiser(),
-      new ObservingSubmarine(),
-      new ObservingSpeedboat(),
-    ];
   }
 }
