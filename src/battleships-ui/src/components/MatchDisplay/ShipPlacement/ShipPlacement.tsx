@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Label } from "@radix-ui/react-label";
 import { MapTile } from "../../../models/MatchMap";
 import { PlayerTeam } from "../../../models/Player";
-import { MatchService } from "../../../services/MatchService/MatchService";
 import HubConnectionService, {
   MatchEventNames,
 } from "../../../services/HubConnectionService/HubConnectionService";
@@ -14,6 +13,7 @@ import { PlayerService } from "../../../services/PlayerService/PlayerService";
 import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
+import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
 
 export default function ShipPlacement() {
   const navigate = useNavigate();
@@ -24,7 +24,9 @@ export default function ShipPlacement() {
 
   const match = MatchProvider.Instance.match;
 
-  const shipsFactory = MatchService.getShipFactory(match.settings.gameMode);
+  const shipsFactory = ShipFactoryCreator.getShipFactory(
+    match.settings.gameMode,
+  );
   const ships = shipsFactory.createShips();
 
   const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;

@@ -53,3 +53,17 @@ export class AmmoGameModeFactory implements AmmoFactory {
     ];
   }
 }
+
+export class FogOfWarGameModeFactory implements AmmoFactory {
+  createAmmo(): Ammo[] {
+    return [
+      Ammo.map({
+        name: "Classic",
+        damage: 2,
+        impactRadius: 2,
+        cooldown: 0,
+        type: AmmoType.Classic,
+      }),
+    ];
+  }
+}

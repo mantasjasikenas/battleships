@@ -7,13 +7,9 @@ import {
   AmmoFactory,
   AmmoGameModeFactory,
   ClassicGameModeFactory,
+  FogOfWarGameModeFactory,
 } from "./AmmoFactory";
-import {
-  IShipFactory,
-  ClassicShipFactory,
-  ModularShipFactory,
-  ObservingShipFactory,
-} from "./ShipFactory";
+import { ShipFactoryCreator } from "./ShipFactory";
 
 export class MatchService {
   static initMatchTeams(): void {
@@ -38,7 +34,9 @@ export class MatchService {
 
   static initMatchPlayerVehicles(): void {
     const match = MatchProvider.Instance.match;
-    const shipFactory = this.getShipFactory(match.settings.gameMode);
+    const shipFactory = ShipFactoryCreator.getShipFactory(
+      match.settings.gameMode,
+    );
 
     match.teamsMap.forEach((map) => {
       const ships = shipFactory.createShips();
@@ -50,10 +48,16 @@ export class MatchService {
     const match = MatchProvider.Instance.match;
     let ammoFactory: AmmoFactory;
 
-    if (match.settings.gameMode === GameMode.Ammo) {
-      ammoFactory = new AmmoGameModeFactory();
-    } else {
-      ammoFactory = new ClassicGameModeFactory();
+    switch (match.settings.gameMode) {
+      case GameMode.Ammo:
+        ammoFactory = new AmmoGameModeFactory();
+        break;
+      case GameMode.Classic:
+        ammoFactory = new ClassicGameModeFactory();
+        break;
+      case GameMode.FogOfWar:
+        ammoFactory = new FogOfWarGameModeFactory();
+        break;
     }
 
     match.availableAmmoTypes = ammoFactory.createAmmo();
@@ -63,19 +67,6 @@ export class MatchService {
     const match = MatchProvider.Instance.match;
 
     match.players = match.players.filter((player) => player.id !== playerId);
-  }
-
-  static getShipFactory(gameMode: GameMode): IShipFactory {
-    switch (gameMode) {
-      case GameMode.Classic:
-        return new ClassicShipFactory();
-      case GameMode.Ammo:
-        return new ModularShipFactory();
-      case GameMode.FogOfWar:
-        return new ObservingShipFactory();
-      default:
-        throw new Error("Unsupported game mode");
-    }
   }
 
   private static initPlayerShipsPlacement(map: MatchMap, ships: Ship[]): void {

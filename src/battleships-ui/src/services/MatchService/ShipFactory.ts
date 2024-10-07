@@ -23,6 +23,22 @@ import {
   ObservingSpeedboat,
   IObservingShip,
 } from "../../models/Ships/ObservingShips";
+import { GameMode } from "@/models/MatchSettings";
+
+export abstract class ShipFactoryCreator {
+  static getShipFactory(gameMode: GameMode): IShipFactory {
+    switch (gameMode) {
+      case GameMode.Classic:
+        return new ClassicShipFactory();
+      case GameMode.Ammo:
+        return new ModularShipFactory();
+      case GameMode.FogOfWar:
+        return new ObservingShipFactory();
+      default:
+        throw new Error("Unsupported game mode");
+    }
+  }
+}
 
 // DESIGN PATTERN: Abstract Factory
 export interface IShipFactory {
