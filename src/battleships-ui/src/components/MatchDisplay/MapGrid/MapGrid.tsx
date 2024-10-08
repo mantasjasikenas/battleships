@@ -58,8 +58,13 @@ function MapGridTile({
   isSelected,
   disableHover,
 }: MapGridTileProps) {
-  let shipPartHpString =
-    tile.shipPart instanceof ModularShipPart && !isEnemyMap
+  // let shipPartHpString =
+  //   tile.shipPart instanceof ModularShipPart && !isEnemyMap
+  //     ? (tile.shipPart as ModularShipPart).hp.toString()
+  //     : "";
+
+      let shipPartHpString =
+    tile.shipPart !== undefined && tile.shipPart.hp !== undefined && !isEnemyMap
       ? (tile.shipPart as ModularShipPart).hp.toString()
       : "";
 
