@@ -25,6 +25,7 @@ import {
 } from "../../models/Ships/ObservingShips";
 import { GameMode } from "@/models/MatchSettings";
 
+// DESIGN PATTERN: Abstract Factory
 export abstract class ShipFactoryCreator {
   static getShipFactory(gameMode: GameMode): IShipFactory {
     switch (gameMode) {
@@ -40,7 +41,6 @@ export abstract class ShipFactoryCreator {
   }
 }
 
-// DESIGN PATTERN: Abstract Factory
 export interface IShipFactory {
   createCarrier(): Ship;
   createBattleship(): Ship;

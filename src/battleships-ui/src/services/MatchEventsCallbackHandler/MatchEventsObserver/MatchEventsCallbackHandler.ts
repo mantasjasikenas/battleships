@@ -1,6 +1,7 @@
 import { MatchEventNames } from '../../HubConnectionService/HubConnectionService';
 import MatchEventsCallbackInvokeable from './MatchEventsInvokeable';
 
+// DESIGN PATTERN: Observer
 export default class MatchEventsCallbackHandler {
   protected invokeables: {
     [event: number]: MatchEventsCallbackInvokeable[];
@@ -8,7 +9,6 @@ export default class MatchEventsCallbackHandler {
 
   constructor() {
     for (const event in MatchEventNames) {
-      // iterator contains `number` type keys, then `string` type values
       if (isNaN(Number(event))) {
         break;
       }
