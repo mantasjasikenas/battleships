@@ -3,7 +3,7 @@ import { ShipClass } from './ShipClass';
 import {
   ClassicShipPart,
   ModularShipPart,
-  ObservingShipPart,
+  // ObservingShipPart,
   ShipPart,
 } from './ShipPart';
 
@@ -45,14 +45,14 @@ export function createParts(
   shipClass: ShipClass
 ): ShipPart[] {
   const result: ShipPart[] = [];
-  for (let i = 0; i < amount; i++) {
-    result.push(createPart(type, shipClass));
+  result.push(createPart(type, shipClass));
+  for (let i = 1; i < amount; i++) {
+    result.push(result[0].shalowCopy());
   }
-
   return result;
 }
 
-function createPart(type: ShipPartType, shipClass: ShipClass) {
+export function createPart(type: ShipPartType, shipClass: ShipClass) {
   switch (type) {
     case ShipPartType.Classic: {
       return new ClassicShipPart(shipClass);
@@ -60,8 +60,8 @@ function createPart(type: ShipPartType, shipClass: ShipClass) {
     case ShipPartType.Modular: {
       return new ModularShipPart(shipClass);
     }
-    case ShipPartType.Observing: {
-      return new ObservingShipPart(shipClass);
-    }
+    // case ShipPartType.Observing: {
+    //   return new ObservingShipPart(shipClass);
+    // }
   }
 }
