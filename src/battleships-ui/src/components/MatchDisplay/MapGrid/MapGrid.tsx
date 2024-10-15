@@ -64,7 +64,7 @@ function MapGridTile({
   //     : "";
 
       let shipPartHpString =
-    tile.shipPart !== undefined && tile.shipPart.hp !== undefined && !isEnemyMap
+    tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
       ? (tile.shipPart as ModularShipPart).hp.toString()
       : "";
 
