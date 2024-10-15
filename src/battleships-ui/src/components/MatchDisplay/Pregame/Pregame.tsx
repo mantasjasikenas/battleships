@@ -202,7 +202,6 @@ export default function Pregame() {
         match.isPregame = false;
 
         MatchService.initMatchTeams();
-        //MatchService.initMatchPlayerVehicles();
         MatchService.initMatchAvailableAmmo();
 
         HubConnectionService.Instance.sendEvent(MatchEventNames.MatchStarted);

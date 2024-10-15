@@ -14,8 +14,7 @@ import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
-import { ModularShipPart, ShipPart } from "@/models/Ships/ShipPart";
-import { ModularBattleship, ModularCarrier } from "@/models/Ships/ModularShips";
+import { ShipPart } from "@/models/Ships/ShipPart";
 
 export default function ShipPlacement() {
   const navigate = useNavigate();
@@ -29,8 +28,6 @@ export default function ShipPlacement() {
   const shipsFactory = ShipFactoryCreator.getShipFactory(
     match.settings.gameMode,
   );
-  
-  
 
   const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
   const currentPlayer = match.players.find(
@@ -38,7 +35,6 @@ export default function ShipPlacement() {
   )!;
 
   currentPlayer.ships = shipsFactory.createShips();
-
 
   const currentPlayerTeam = currentPlayer.team;
 
@@ -144,7 +140,10 @@ export default function ShipPlacement() {
       let a = Math.floor(Math.random() * (2 - 0)) + 0;
 
       if (a === 0) {
-        if (currentPlayer.ships[validNr].parts.length + y > alliesTeamMap.tiles[0].length) {
+        if (
+          currentPlayer.ships[validNr].parts.length + y >
+          alliesTeamMap.tiles[0].length
+        ) {
           continue;
         }
 
@@ -163,7 +162,10 @@ export default function ShipPlacement() {
           alliesTeamMap.tiles[x][y + partIndex].shipPart = part;
         });
       } else {
-        if (currentPlayer.ships[validNr].parts.length + x > alliesTeamMap.tiles.length) {
+        if (
+          currentPlayer.ships[validNr].parts.length + x >
+          alliesTeamMap.tiles.length
+        ) {
           continue;
         }
 
@@ -208,7 +210,8 @@ export default function ShipPlacement() {
     } else {
       if (selectedAlignment === 0) {
         if (
-          currentPlayer.ships[currentPlayer.placedShips].parts.length + selectedTile.y >
+          currentPlayer.ships[currentPlayer.placedShips].parts.length +
+            selectedTile.y >
           alliesTeamMap.tiles[0].length
         ) {
           toast.error("Can't place ship out of bounds!");
@@ -229,7 +232,8 @@ export default function ShipPlacement() {
         }
       } else {
         if (
-          currentPlayer.ships[currentPlayer.placedShips].parts.length + selectedTile.x >
+          currentPlayer.ships[currentPlayer.placedShips].parts.length +
+            selectedTile.x >
           alliesTeamMap.tiles.length
         ) {
           toast.error("Can't place ship out of bounds!");
@@ -275,16 +279,20 @@ export default function ShipPlacement() {
     const otherMap = match.teamsMap.get(otherTeam);
 
     if (alignment === 0) {
-      ships[placer.placedShips].parts.forEach((part: ShipPart | undefined, partIndex: number) => {
-        currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
-      });
+      ships[placer.placedShips].parts.forEach(
+        (part: ShipPart | undefined, partIndex: number) => {
+          currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
+        },
+      );
     } else {
-      ships[placer.placedShips].parts.forEach((part: ShipPart | undefined, partIndex: number) => {
-        currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
-      });
+      ships[placer.placedShips].parts.forEach(
+        (part: ShipPart | undefined, partIndex: number) => {
+          currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
+        },
+      );
     }
     placer.placedShips++;
-    
+
     if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
       navigate("/match/");
     } else if (placer.placedShips >= ships.length) {
