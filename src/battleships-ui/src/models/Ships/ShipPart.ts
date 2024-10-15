@@ -6,14 +6,14 @@ export abstract class ShipPart {
       this.isDestroyed = part.isDestroyed;
       this.shipClass = part.shipClass;
     }
-    else{
+    if(shipClass !== undefined){
       this.shipClass = shipClass;
     }
   }
   
 
   isDestroyed = false;
-  shipClass: ShipClass;
+  shipClass: ShipClass | undefined;
 
   public abstract shalowCopy():ShipPart;
   public abstract deepCopy():ShipPart;

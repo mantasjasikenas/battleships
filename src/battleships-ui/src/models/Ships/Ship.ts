@@ -10,7 +10,7 @@ import {
 export enum ShipPartType {
   Classic,
   Modular,
-  Observing,
+  // Observing,
 }
 
 export default abstract class Ship extends Vehicle {
@@ -45,9 +45,10 @@ export function createParts(
   shipClass: ShipClass
 ): ShipPart[] {
   const result: ShipPart[] = [];
+  
   result.push(createPart(type, shipClass));
   for (let i = 1; i < amount; i++) {
-    result.push(result[0].shalowCopy());
+    result.push(result[0].deepCopy());
   }
   return result;
 }

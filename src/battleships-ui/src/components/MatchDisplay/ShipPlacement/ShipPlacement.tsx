@@ -14,7 +14,7 @@ import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
-import { ModularShipPart } from "@/models/Ships/ShipPart";
+import { ModularShipPart, ShipPart } from "@/models/Ships/ShipPart";
 import { ModularBattleship, ModularCarrier } from "@/models/Ships/ModularShips";
 
 export default function ShipPlacement() {
@@ -275,11 +275,11 @@ export default function ShipPlacement() {
     const otherMap = match.teamsMap.get(otherTeam);
 
     if (alignment === 0) {
-      ships[placer.placedShips].parts.forEach((part, partIndex) => {
+      ships[placer.placedShips].parts.forEach((part: ShipPart | undefined, partIndex: number) => {
         currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
       });
     } else {
-      ships[placer.placedShips].parts.forEach((part, partIndex) => {
+      ships[placer.placedShips].parts.forEach((part: ShipPart | undefined, partIndex: number) => {
         currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
       });
     }
