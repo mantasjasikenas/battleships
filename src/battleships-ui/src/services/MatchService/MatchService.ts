@@ -3,11 +3,11 @@ import { GameMode } from "../../models/MatchSettings";
 import { PlayerTeam } from "../../models/Player";
 import MatchProvider from "../MatchProvider/MatchProvider";
 import {
-  AmmoFactory,
+  GameModeAmmoFactory,
   AmmoGameModeFactory,
   ClassicGameModeFactory,
   FogOfWarGameModeFactory,
-} from "./AmmoFactory";
+} from "./GameModeAmmoFactory";
 
 export class MatchService {
   static initMatchTeams(): void {
@@ -32,7 +32,7 @@ export class MatchService {
 
   static initMatchAvailableAmmo(): void {
     const match = MatchProvider.Instance.match;
-    let ammoFactory: AmmoFactory;
+    let ammoFactory: GameModeAmmoFactory;
 
     switch (match.settings.gameMode) {
       case GameMode.Ammo:

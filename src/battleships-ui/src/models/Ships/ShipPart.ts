@@ -1,22 +1,22 @@
 import { ShipClass } from "./ShipClass";
 
+// DESIGN PATTERN: Prototype
 export abstract class ShipPart {
   constructor(shipClass?: ShipClass, part?: ShipPart) {
-    if(part){
+    if (part) {
       this.isDestroyed = part.isDestroyed;
       this.shipClass = part.shipClass;
     }
-    if(shipClass !== undefined){
+    if (shipClass !== undefined) {
       this.shipClass = shipClass;
     }
   }
-  
 
   isDestroyed = false;
   shipClass: ShipClass | undefined;
 
-  public abstract shalowCopy():ShipPart;
-  public abstract deepCopy():ShipPart;
+  public abstract shalowCopy(): ShipPart;
+  public abstract deepCopy(): ShipPart;
 }
 
 export class ClassicShipPart extends ShipPart {
@@ -29,9 +29,9 @@ export class ClassicShipPart extends ShipPart {
 }
 
 export class ModularShipPart extends ShipPart {
-  constructor(shipClass?: ShipClass, part?: ModularShipPart){
+  constructor(shipClass?: ShipClass, part?: ModularShipPart) {
     super(shipClass, part);
-    if(part){
+    if (part) {
       this.initialHp = part.initialHp;
       this.hp = part.hp;
     }
@@ -40,7 +40,6 @@ export class ModularShipPart extends ShipPart {
     return this;
   }
   public deepCopy(): ShipPart {
-    
     return new ModularShipPart(undefined, this);
   }
   readonly initialHp = 10;
