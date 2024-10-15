@@ -2,18 +2,18 @@ import { ShipClass } from "./ShipClass";
 
 export abstract class ShipPart {
   constructor(shipClass?: ShipClass, part?: ShipPart) {
-    if(shipClass){
-      this.shipClass = shipClass;
-    }
     if(part){
       this.isDestroyed = part.isDestroyed;
       this.shipClass = part.shipClass;
+    }
+    else{
+      this.shipClass = shipClass;
     }
   }
   
 
   isDestroyed = false;
-  shipClass: ShipClass | undefined;
+  shipClass: ShipClass;
 
   public abstract shalowCopy():ShipPart;
   public abstract deepCopy():ShipPart;
