@@ -119,9 +119,7 @@ class AttackInfo {
   }
 
   static damageAttack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-    console.log('damage');
     if (!!tile.shipPart) {
-      console.log('ship part');
       const shipPart = tile.shipPart as ModularShipPart;
 
       shipPart.hp -= ammo.damage;

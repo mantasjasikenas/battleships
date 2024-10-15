@@ -24,7 +24,7 @@ export class ClassicShipPart extends ShipPart {
     return this;
   }
   public deepCopy(): ShipPart {
-    return new ClassicShipPart(this) as ShipPart;
+    return new ClassicShipPart(undefined, this);
   }
 }
 
@@ -40,7 +40,8 @@ export class ModularShipPart extends ShipPart {
     return this;
   }
   public deepCopy(): ShipPart {
-    return new ClassicShipPart(this) as ShipPart;
+    
+    return new ModularShipPart(undefined, this);
   }
   readonly initialHp = 10;
 
