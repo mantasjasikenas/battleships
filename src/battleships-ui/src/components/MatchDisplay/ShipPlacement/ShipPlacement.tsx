@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
 import { ShipPart } from "@/models/Ships/ShipPart";
+import { Interpreter } from "@/services/CommandInterpreter/Interpreter/Interpreter";
+import { Invoker, PlaceShipCommand } from "@/models/command";
 
 export default function ShipPlacement() {
   const navigate = useNavigate();
@@ -39,11 +41,12 @@ export default function ShipPlacement() {
   const currentPlayerTeam = currentPlayer.team;
 
   const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
+  const invoker = new Invoker()
 
   useEffect(() => {
     HubConnectionService.Instance.addSingular(
       MatchEventNames.ShipsPlaced,
-      handlePlaceTurnEvent,
+      placeShip,
     );
   }, []);
 
@@ -127,6 +130,7 @@ export default function ShipPlacement() {
 
     for (let i = 0; i < 100; i++) {
       if (validNr >= currentPlayer.ships.length) {
+        rerender();
         toast.success("All ships placed");
         return;
       }
@@ -186,7 +190,11 @@ export default function ShipPlacement() {
       }
 
       validNr++;
+      // invoker.setCommand(new PlaceShipCommand(currentPlayer.id, currentPlayer.team, new MapTile(x, y), a, currentPlayer.ships, navigate));
+      // invoker.pressButton();
+      console.log(currentPlayer.id, currentPlayer.team, new MapTile(x, y), a, currentPlayer.ships, navigate);
 
+      
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
@@ -253,6 +261,10 @@ export default function ShipPlacement() {
           }
         }
       }
+      // invoker.setCommand(new PlaceShipCommand(currentPlayer.id, currentPlayer.team, selectedTile, selectedAlignment, currentPlayer.ships, navigate));
+      // invoker.pressButton();
+      console.log(currentPlayer.id, currentPlayer.team, selectedTile, selectedAlignment, currentPlayer.ships, navigate);
+      
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
@@ -260,11 +272,12 @@ export default function ShipPlacement() {
         alignment: selectedAlignment,
         ships: currentPlayer.ships,
       });
+      rerender();
     }
     return;
   }
 
-  function handlePlaceTurnEvent(data: any): void {
+  function placeShip(data: any): void {
     const { placerId, placerTeam, tile, alignment, ships } = data;
 
     const placer = match.players.find((player) => player.id === placerId)!;
@@ -277,27 +290,32 @@ export default function ShipPlacement() {
         : PlayerTeam.FirstTeam;
 
     const otherMap = match.teamsMap.get(otherTeam);
+    invoker.setCommand(new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships));
+    invoker.pressButton();
 
-    if (alignment === 0) {
-      ships[placer.placedShips].parts.forEach(
-        (part: ShipPart | undefined, partIndex: number) => {
-          currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
-        },
-      );
-    } else {
-      ships[placer.placedShips].parts.forEach(
-        (part: ShipPart | undefined, partIndex: number) => {
-          currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
-        },
-      );
-    }
-    placer.placedShips++;
+
+    // if (alignment === 0) {
+    //   ships[placer.placedShips].parts.forEach(
+    //     (part: ShipPart | undefined, partIndex: number) => {
+    //       currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
+    //     },
+    //   );
+    // } else {
+    //   ships[placer.placedShips].parts.forEach(
+    //     (part: ShipPart | undefined, partIndex: number) => {
+    //       currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
+    //     },
+    //   );
+    // }
+    // placer.placedShips++;
 
     if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
       navigate("/match/");
     } else if (placer.placedShips >= ships.length) {
       currentMap.shipsPlaced = true;
     }
+    console.log(placer.placedShips, ships.length, currentMap.shipsPlaced, otherMap?.shipsPlaced);
+
     rerender();
   }
 

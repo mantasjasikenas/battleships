@@ -2,6 +2,7 @@ import { Ammo } from "./Ammo";
 import MatchMap from "./MatchMap";
 import MatchSettings from "./MatchSettings";
 import { Player, PlayerTeam } from "./Player";
+import { ShipPart } from "./Ships/ShipPart";
 
 export class Match {
   name: string;
