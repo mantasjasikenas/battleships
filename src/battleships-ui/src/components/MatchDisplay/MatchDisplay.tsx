@@ -111,11 +111,11 @@ export default function MatchDisplay() {
       handlePlayerLeftEvent,
     );
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Enter") {
-        onAttack();
-      }
-    }
+    // function handleKeyDown(e: KeyboardEvent) {
+    //   if (e.key === "Enter") {
+    //     onAttack();
+    //   }
+    // }
 
     function unloadCallback(_e: BeforeUnloadEvent) {
       HubConnectionService.Instance.remove(MatchEventNames.AttackPerformed);
@@ -127,11 +127,11 @@ export default function MatchDisplay() {
       });
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    // document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("beforeunload", unloadCallback);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      // document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeunload", unloadCallback);
     };
   }, []);

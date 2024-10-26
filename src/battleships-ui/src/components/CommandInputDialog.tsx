@@ -11,8 +11,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useEffect } from "react";
+import { Interpreter } from "@/services/CommandInterpreter/Interpreter/Interpreter";
 
 export function CommandInputDialog() {
+  const interpreter = new Interpreter();
   const [open, setOpen] = React.useState(false);
 
   // replace this with your own commands (command objects)
@@ -44,21 +46,36 @@ export function CommandInputDialog() {
     setOpen(false);
   };
 
+  const handleButtonPress = (e: any) => {
+    if(e.key === "Enter"){
+      interpreter.interpret(e.target.value);
+      setOpen(false);
+    }
+  };
+
+  // return (
+  //   <CommandDialog open={open} onOpenChange={setOpen}>
+  //     <CommandInput placeholder="Type a command or search..." />
+  //     <CommandList>
+  //       <CommandEmpty>No results found.</CommandEmpty>
+  //       <CommandGroup heading="Commands">
+  //         {commands.map((command) => (
+  //           <CommandItem
+  //             key={command.command}
+  //             onSelect={() => handleSelect(command.command)}
+  //           >
+  //             <span>{command.label}</span>
+  //           </CommandItem>
+  //         ))}
+  //       </CommandGroup>
+  //     </CommandList>
+  //   </CommandDialog>
+  // );
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Type a command or search..." />
+      <CommandInput placeholder="Type a command or search..." onKeyDown={handleButtonPress}/>
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Commands">
-          {commands.map((command) => (
-            <CommandItem
-              key={command.command}
-              onSelect={() => handleSelect(command.command)}
-            >
-              <span>{command.label}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
       </CommandList>
     </CommandDialog>
   );

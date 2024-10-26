@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Ammo, AmmoType } from "../../models/Ammo";
 import MatchMap, { MapTile } from "../../models/MatchMap";
 import { PlayerTeam } from "../../models/Player";
@@ -23,7 +24,7 @@ export class AttackHandlerService {
     const ammo = availableAmmoTypes.find((ammo) => ammo.type === ammoType);
 
     if (!ammo) {
-      console.error(
+      toast.error(
         `Unable to resolve attack by type ${ammoType}. Available types are: ${JSON.stringify(
           availableAmmoTypes,
         )}`,

@@ -14,9 +14,7 @@ import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
-import { ShipPart } from "@/models/Ships/ShipPart";
-import { Interpreter } from "@/services/CommandInterpreter/Interpreter/Interpreter";
-import { Invoker, PlaceShipCommand } from "@/models/command";
+import { PlaceShipCommand } from "@/models/command";
 
 export default function ShipPlacement() {
   const navigate = useNavigate();
