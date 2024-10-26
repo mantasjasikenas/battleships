@@ -192,9 +192,6 @@ export default function ShipPlacement() {
       }
 
       validNr++;
-      // invoker.setCommand(new PlaceShipCommand(currentPlayer.id, currentPlayer.team, new MapTile(x, y), a, currentPlayer.ships, navigate));
-      // invoker.pressButton();
-      console.log(currentPlayer.id, currentPlayer.team, new MapTile(x, y), a, currentPlayer.ships, navigate);
 
       
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
@@ -263,9 +260,6 @@ export default function ShipPlacement() {
           }
         }
       }
-      // invoker.setCommand(new PlaceShipCommand(currentPlayer.id, currentPlayer.team, selectedTile, selectedAlignment, currentPlayer.ships, navigate));
-      // invoker.pressButton();
-      console.log(currentPlayer.id, currentPlayer.team, selectedTile, selectedAlignment, currentPlayer.ships, navigate);
       
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
@@ -294,26 +288,9 @@ export default function ShipPlacement() {
     const otherMap = match.teamsMap.get(otherTeam);
     placer.invoker.execute(new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships));
 
-
-    // if (alignment === 0) {
-    //   ships[placer.placedShips].parts.forEach(
-    //     (part: ShipPart | undefined, partIndex: number) => {
-    //       currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
-    //     },
-    //   );
-    // } else {
-    //   ships[placer.placedShips].parts.forEach(
-    //     (part: ShipPart | undefined, partIndex: number) => {
-    //       currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
-    //     },
-    //   );
-    // }
-    // placer.placedShips++;
-
     if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
       navigate("/match/");
     } 
-    console.log(placer.placedShips, ships.length, currentMap.shipsPlaced, otherMap?.shipsPlaced);
 
     rerender();
   }

@@ -18,16 +18,16 @@ export function CommandInputDialog() {
   const [open, setOpen] = React.useState(false);
 
   // replace this with your own commands (command objects)
-  const commands = [
-    {
-      label: "Place ships",
-      command: "place-ships",
-    },
-    {
-      label: "Example command",
-      command: "example-command",
-    },
-  ];
+  // const commands = [
+  //   {
+  //     label: "Place ships",
+  //     command: "place-ships",
+  //   },
+  //   {
+  //     label: "Example command",
+  //     command: "example-command",
+  //   },
+  // ];
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -41,10 +41,10 @@ export function CommandInputDialog() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const handleSelect = (command: string) => {
-    console.log(`Selected command: ${command}`);
-    setOpen(false);
-  };
+  // const handleSelect = (command: string) => {
+  //   console.log(`Selected command: ${command}`);
+  //   setOpen(false);
+  // };
 
   const handleButtonPress = (e: any) => {
     if(e.key === "Enter"){

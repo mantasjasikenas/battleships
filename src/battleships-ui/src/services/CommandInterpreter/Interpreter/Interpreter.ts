@@ -7,6 +7,7 @@ import HubConnectionService, {
 import MatchProvider from '../../MatchProvider/MatchProvider';
 import AsciiEmojiParser  from 'ascii-emoji-parser';
 import { MapTile } from '@/models/MatchMap';
+import { toast } from 'sonner';
 
 export interface CommsEventProps {
   player: Player;
@@ -57,6 +58,7 @@ export class Interpreter implements IInterpreter {
         return this.tryResolveMessageCommandExpression(tokens);
       }
       default: {
+        toast.error("No such command");
         return undefined;
       }
     }
@@ -65,6 +67,7 @@ export class Interpreter implements IInterpreter {
     tokens: string[]
   ): (() => void) | undefined {
     if (tokens.length < 4) {
+      toast.error("missing parrameters");
       return undefined;
     }
 
@@ -77,6 +80,7 @@ export class Interpreter implements IInterpreter {
     tokens: string[]
   ): (() => void) | undefined {
     if (tokens.length < 1) {
+      toast.error("missing parrameters");
       return undefined;
     }
 
@@ -87,12 +91,14 @@ export class Interpreter implements IInterpreter {
 
   private tryResolveAttackCommandExpression(tokens: string[]): (() => void) | undefined {
     if (tokens.length < 4) {
+      toast.error("missing parrameters");
       return undefined;
     }
 
     const ammoType = this.tryResolveAmmoType(tokens[1]);
 
     if (ammoType == null) {
+      toast.error("Ammo type not found");
       return undefined;
     }
 
@@ -158,6 +164,11 @@ export class Interpreter implements IInterpreter {
       const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
 
       if (!currentPlayer) {
+        toast.error("Player not found");
+        return;
+      }
+      if(alignment !== 0 && alignment !== 1){
+        toast.error("No such alignment");
         return;
       }
 
@@ -177,6 +188,7 @@ export class Interpreter implements IInterpreter {
       const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
 
       if (!currentPlayer) {
+        toast.error("Player not found");
         return;
       }
 
@@ -201,6 +213,7 @@ export class Interpreter implements IInterpreter {
       const enemiesTeamMap = match.teamsMap.get(enemyTeam)!;
 
       if (!currentPlayer || !enemiesTeamMap) {
+        toast.error("Player or enemie not found");
         return;
       }
 

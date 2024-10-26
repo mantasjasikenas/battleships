@@ -3,7 +3,6 @@ import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
 import { invertTeam, PlayerTeam } from "../../models/Player";
 import {
-  AttackHandlerService,
   AttackTurnEventProps,
 } from "../../services/AttackHandlerService/AttackHandlerService";
 import HubConnectionService, {
@@ -23,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { MatchService } from "@/services/MatchService/MatchService";
 import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
-import { AttackCommand, Invoker } from "@/models/command";
+import { AttackCommand } from "@/models/command";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
