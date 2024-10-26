@@ -13,6 +13,7 @@ export class Match {
   teamsMap: Map<PlayerTeam, MatchMap> = new Map();
   settings: MatchSettings = new MatchSettings();
   availableAmmoTypes: Ammo[] = [];
+  
 
   constructor(object?: Partial<Match>) {
     this.name = object?.name ?? "New match";

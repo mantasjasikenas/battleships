@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { MatchService } from "@/services/MatchService/MatchService";
 import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
+import { AttackCommand, Invoker } from "@/models/command";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -94,6 +95,10 @@ export default function MatchDisplay() {
     HubConnectionService.Instance.addSingular(
       MatchEventNames.AttackPerformed,
       handleAttackTurnEvent,
+    );
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.UndoCommand,
+      Undo,
     );
 
     HubConnectionService.Instance.addSingular(
@@ -210,10 +215,22 @@ export default function MatchDisplay() {
           >
             Attack!
           </Button>
+          <Button
+            onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}
+          >
+            Undo
+          </Button>
         </div>
       </div>
     </div>
   );
+
+  function Undo(data: any){
+    const {userId} = data;
+    const user = match.players.find((player) => player.id === userId)!;
+    user.invoker.undo();
+    rerender();
+  }
 
   function onAmmoSelect(ammo: Ammo): void {
     setSelectedAmmo(ammo);
@@ -332,17 +349,11 @@ export default function MatchDisplay() {
     const { attackerId, attackerTeam, tile, ammoType } =
       data as AttackTurnEventProps;
 
+    const attacker = match.players.find((player) => player.id === attackerId)!;
+
     const attackedTeam = invertTeam(attackerTeam);
 
-    const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
-    const mapTile = attackedTeamMap.tiles[tile.x][tile.y];
-
-    const attackFunc = AttackHandlerService.getAttackByAmmo(
-      ammoType,
-      match.availableAmmoTypes,
-    );
-
-    attackFunc(mapTile, attackedTeamMap);
+    attacker.invoker.execute(new AttackCommand(attackerTeam, tile, ammoType));
 
     if (attackerTeam === currentPlayerTeam) {
       setAlliesTeamStats((_prev) => calculateTeamStats(enemiesTeamMap));

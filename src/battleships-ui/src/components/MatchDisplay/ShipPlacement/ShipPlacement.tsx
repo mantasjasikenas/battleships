@@ -41,12 +41,17 @@ export default function ShipPlacement() {
   const currentPlayerTeam = currentPlayer.team;
 
   const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
-  const invoker = new Invoker()
 
   useEffect(() => {
     HubConnectionService.Instance.addSingular(
       MatchEventNames.ShipsPlaced,
       placeShip,
+    );
+  }, []);
+  useEffect(() => {
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.UndoCommand,
+      Undo,
     );
   }, []);
 
@@ -112,10 +117,9 @@ export default function ShipPlacement() {
         </div>
 
         <div className="mt-8 flex justify-center gap-2">
-          <Button disabled={!selectedTile} onClick={() => onPlace()}>
-            Place
-          </Button>
+          <Button disabled={!selectedTile} onClick={() => onPlace()}>Place</Button>
           <Button onClick={() => onRandom()}>Place randomly</Button>
+          <Button onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}>Undo</Button>
         </div>
       </div>
     </div>
@@ -290,8 +294,7 @@ export default function ShipPlacement() {
         : PlayerTeam.FirstTeam;
 
     const otherMap = match.teamsMap.get(otherTeam);
-    invoker.setCommand(new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships));
-    invoker.pressButton();
+    placer.invoker.execute(new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships));
 
 
     // if (alignment === 0) {
@@ -311,11 +314,16 @@ export default function ShipPlacement() {
 
     if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
       navigate("/match/");
-    } else if (placer.placedShips >= ships.length) {
-      currentMap.shipsPlaced = true;
-    }
+    } 
     console.log(placer.placedShips, ships.length, currentMap.shipsPlaced, otherMap?.shipsPlaced);
 
+    rerender();
+  }
+
+  function Undo(data: any){
+    const { userId } = data; 
+    const user = match.players.find((player) => player.id === userId)!;
+    user.invoker.undo();
     rerender();
   }
 
