@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
 import { invertTeam, PlayerTeam } from "../../models/Player";
-import {
-  AttackTurnEventProps,
-} from "../../services/AttackHandlerService/AttackHandlerService";
+import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
 import HubConnectionService, {
   MatchEventNames,
 } from "../../services/HubConnectionService/HubConnectionService";
@@ -97,7 +95,7 @@ export default function MatchDisplay() {
     );
     HubConnectionService.Instance.addSingular(
       MatchEventNames.UndoCommand,
-      Undo,
+      handleUndoCommandEvent,
     );
 
     HubConnectionService.Instance.addSingular(
@@ -206,7 +204,7 @@ export default function MatchDisplay() {
 
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center gap-2">
           <Button
             disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
             variant={"destructive"}
@@ -216,17 +214,14 @@ export default function MatchDisplay() {
           </Button>
           <Button
           disabled={currentPlayer.invoker.commands.length < 1}
-            onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}
-          >
-            Undo
-          </Button>
+          onClick={() => onUndo()}>Undo</Button>
         </div>
       </div>
     </div>
   );
 
-  function Undo(data: any){
-    const {userId} = data;
+  function handleUndoCommandEvent(data: any) {
+    const { userId } = data;
     const user = match.players.find((player) => player.id === userId)!;
     user.invoker.undo();
     rerender();
@@ -279,6 +274,12 @@ export default function MatchDisplay() {
     });
 
     setSelectedTile(null);
+  }
+
+  function onUndo(): void {
+    HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {
+      userId: currentPlayerId,
+    });
   }
 
   function onGaveUp(): void {
