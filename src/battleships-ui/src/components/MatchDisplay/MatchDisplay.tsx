@@ -215,6 +215,7 @@ export default function MatchDisplay() {
             Attack!
           </Button>
           <Button
+          disabled={currentPlayer.invoker.commands.length < 1}
             onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}
           >
             Undo

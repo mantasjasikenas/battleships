@@ -117,7 +117,9 @@ export default function ShipPlacement() {
         <div className="mt-8 flex justify-center gap-2">
           <Button disabled={!selectedTile} onClick={() => onPlace()}>Place</Button>
           <Button onClick={() => onRandom()}>Place randomly</Button>
-          <Button onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}>Undo</Button>
+          <Button 
+          disabled={currentPlayer.invoker.commands.length < 1}
+          onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}>Undo</Button>
         </div>
       </div>
     </div>
