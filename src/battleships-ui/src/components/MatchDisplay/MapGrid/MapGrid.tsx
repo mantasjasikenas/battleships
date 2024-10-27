@@ -58,15 +58,13 @@ function MapGridTile({
   isSelected,
   disableHover,
 }: MapGridTileProps) {
-  // let shipPartHpString =
-  //   tile.shipPart instanceof ModularShipPart && !isEnemyMap
-  //     ? (tile.shipPart as ModularShipPart).hp.toString()
-  //     : "";
 
-      let shipPartHpString =
+  let shipPartHpString =
     tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
       ? (tile.shipPart as ModularShipPart).hp.toString()
       : "";
+
+  let decoratedShipPart = getText(tile);
 
   return (
     <div
@@ -78,10 +76,24 @@ function MapGridTile({
       onClick={() => onTileSelect(tile)}
     >
       <span className="map-tile-hp-span flex h-full w-full items-center justify-center">
-        {shipPartHpString}
+        {decoratedShipPart || shipPartHpString}
       </span>
     </div>
   );
+
+  function getText(tile: MapTile): string {
+    let currentPart = tile.shipPart;
+
+    while (currentPart) {
+      if ("shipPartName" in currentPart && !isEnemyMap) {
+        return (currentPart as any).shipPartName;
+      }
+      // move to the next decorated layer
+      currentPart = (currentPart as any).decoratedShipPart;
+    }
+
+    return "";
+  }
 
   function getColor(tile: MapTile): string {
     if (isSelected) {
