@@ -14,7 +14,7 @@ import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
-import { ShipPart } from "@/models/Ships/ShipPart";
+import { PlaceShipCommand } from "@/models/command";
 
 export default function ShipPlacement() {
   const navigate = useNavigate();
@@ -43,7 +43,13 @@ export default function ShipPlacement() {
   useEffect(() => {
     HubConnectionService.Instance.addSingular(
       MatchEventNames.ShipsPlaced,
-      handlePlaceTurnEvent,
+      placeShip,
+    );
+  }, []);
+  useEffect(() => {
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.UndoCommand,
+      Undo,
     );
   }, []);
 
@@ -109,10 +115,11 @@ export default function ShipPlacement() {
         </div>
 
         <div className="mt-8 flex justify-center gap-2">
-          <Button disabled={!selectedTile} onClick={() => onPlace()}>
-            Place
-          </Button>
+          <Button disabled={!selectedTile} onClick={() => onPlace()}>Place</Button>
           <Button onClick={() => onRandom()}>Place randomly</Button>
+          <Button 
+          disabled={currentPlayer.invoker.commands.length < 1}
+          onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}>Undo</Button>
         </div>
       </div>
     </div>
@@ -127,6 +134,7 @@ export default function ShipPlacement() {
 
     for (let i = 0; i < 100; i++) {
       if (validNr >= currentPlayer.ships.length) {
+        rerender();
         toast.success("All ships placed");
         return;
       }
@@ -187,6 +195,7 @@ export default function ShipPlacement() {
 
       validNr++;
 
+      
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
@@ -253,6 +262,7 @@ export default function ShipPlacement() {
           }
         }
       }
+      
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
@@ -260,11 +270,12 @@ export default function ShipPlacement() {
         alignment: selectedAlignment,
         ships: currentPlayer.ships,
       });
+      rerender();
     }
     return;
   }
 
-  function handlePlaceTurnEvent(data: any): void {
+  function placeShip(data: any): void {
     const { placerId, placerTeam, tile, alignment, ships } = data;
 
     const placer = match.players.find((player) => player.id === placerId)!;
@@ -277,27 +288,19 @@ export default function ShipPlacement() {
         : PlayerTeam.FirstTeam;
 
     const otherMap = match.teamsMap.get(otherTeam);
-
-    if (alignment === 0) {
-      ships[placer.placedShips].parts.forEach(
-        (part: ShipPart | undefined, partIndex: number) => {
-          currentMap.tiles[tile.x][tile.y + partIndex].shipPart = part;
-        },
-      );
-    } else {
-      ships[placer.placedShips].parts.forEach(
-        (part: ShipPart | undefined, partIndex: number) => {
-          currentMap.tiles[tile.x + partIndex][tile.y].shipPart = part;
-        },
-      );
-    }
-    placer.placedShips++;
+    placer.invoker.execute(new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships));
 
     if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
       navigate("/match/");
-    } else if (placer.placedShips >= ships.length) {
-      currentMap.shipsPlaced = true;
-    }
+    } 
+
+    rerender();
+  }
+
+  function Undo(data: any){
+    const { userId } = data; 
+    const user = match.players.find((player) => player.id === userId)!;
+    user.invoker.undo();
     rerender();
   }
 

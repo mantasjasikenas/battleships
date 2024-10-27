@@ -3,7 +3,6 @@ import { Ammo } from "./Ammo";
 import MatchMap, { MapTile } from "./MatchMap";
 import { ShipClass } from "./Ships/ShipClass";
 import { ModularShipPart } from "./Ships/ShipPart";
-import { Console } from "console";
 
 // DESIGN PATTERN: Strategy
 export class Context {

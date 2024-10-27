@@ -1,8 +1,10 @@
-import { PlayerTeam } from "@/models/Player";
+import { PlayerTeam} from "@/models/Player";
 import { Match } from "../../models/Match";
+import MatchMap from "@/models/MatchMap";
 
 // DESIGN PATTERN: Singleton
 export default class MatchProvider {
+  
   match: Match;
 
   private static _instance: MatchProvider;
@@ -22,6 +24,9 @@ export default class MatchProvider {
   public static getTeamMap(team: PlayerTeam) {
     return this.Instance.match.teamsMap.get(team);
   }
+  public static setTeamMap(team: PlayerTeam, map: MatchMap) {
+    this.Instance.match.teamsMap.set(team, map);
+  }
 
   public static get Instance(): MatchProvider {
     MatchProvider._instance ??= new MatchProvider();
@@ -32,4 +37,5 @@ export default class MatchProvider {
   public static reset() {
     MatchProvider._instance = new MatchProvider();
   }
+  
 }

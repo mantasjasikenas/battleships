@@ -13,6 +13,7 @@ export class Match {
   settings: MatchSettings = new MatchSettings();
   availableAmmoTypes: Ammo[] = [];
 
+
   constructor(object?: Partial<Match>) {
     this.name = object?.name ?? "New match";
     this.isPregame = object?.isPregame ?? true;

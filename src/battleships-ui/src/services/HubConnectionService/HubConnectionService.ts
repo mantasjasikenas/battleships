@@ -76,4 +76,5 @@ export enum MatchEventNames {
   PlayerGaveUp,
   PlayerLeft,
   PlayerLeftLobby,
+  UndoCommand,
 }

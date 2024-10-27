@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
 import { invertTeam, PlayerTeam } from "../../models/Player";
-import {
-  AttackHandlerService,
-  AttackTurnEventProps,
-} from "../../services/AttackHandlerService/AttackHandlerService";
+import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
 import HubConnectionService, {
   MatchEventNames,
 } from "../../services/HubConnectionService/HubConnectionService";
@@ -23,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { MatchService } from "@/services/MatchService/MatchService";
 import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
+import { AttackCommand } from "@/models/command";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -95,6 +93,10 @@ export default function MatchDisplay() {
       MatchEventNames.AttackPerformed,
       handleAttackTurnEvent,
     );
+    HubConnectionService.Instance.addSingular(
+      MatchEventNames.UndoCommand,
+      handleUndoCommandEvent,
+    );
 
     HubConnectionService.Instance.addSingular(
       MatchEventNames.PlayerGaveUp,
@@ -106,11 +108,11 @@ export default function MatchDisplay() {
       handlePlayerLeftEvent,
     );
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Enter") {
-        onAttack();
-      }
-    }
+    // function handleKeyDown(e: KeyboardEvent) {
+    //   if (e.key === "Enter") {
+    //     onAttack();
+    //   }
+    // }
 
     function unloadCallback(_e: BeforeUnloadEvent) {
       HubConnectionService.Instance.remove(MatchEventNames.AttackPerformed);
@@ -122,11 +124,11 @@ export default function MatchDisplay() {
       });
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    // document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("beforeunload", unloadCallback);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      // document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeunload", unloadCallback);
     };
   }, []);
@@ -202,7 +204,7 @@ export default function MatchDisplay() {
 
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center gap-2">
           <Button
             disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
             variant={"destructive"}
@@ -210,10 +212,20 @@ export default function MatchDisplay() {
           >
             Attack!
           </Button>
+          <Button
+          disabled={currentPlayer.invoker.commands.length < 1}
+          onClick={() => onUndo()}>Undo</Button>
         </div>
       </div>
     </div>
   );
+
+  function handleUndoCommandEvent(data: any) {
+    const { userId } = data;
+    const user = match.players.find((player) => player.id === userId)!;
+    user.invoker.undo();
+    rerender();
+  }
 
   function onAmmoSelect(ammo: Ammo): void {
     setSelectedAmmo(ammo);
@@ -262,6 +274,12 @@ export default function MatchDisplay() {
     });
 
     setSelectedTile(null);
+  }
+
+  function onUndo(): void {
+    HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {
+      userId: currentPlayerId,
+    });
   }
 
   function onGaveUp(): void {
@@ -332,17 +350,11 @@ export default function MatchDisplay() {
     const { attackerId, attackerTeam, tile, ammoType } =
       data as AttackTurnEventProps;
 
+    const attacker = match.players.find((player) => player.id === attackerId)!;
+
     const attackedTeam = invertTeam(attackerTeam);
 
-    const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
-    const mapTile = attackedTeamMap.tiles[tile.x][tile.y];
-
-    const attackFunc = AttackHandlerService.getAttackByAmmo(
-      ammoType,
-      match.availableAmmoTypes,
-    );
-
-    attackFunc(mapTile, attackedTeamMap);
+    attacker.invoker.execute(new AttackCommand(attackerTeam, tile, ammoType));
 
     if (attackerTeam === currentPlayerTeam) {
       setAlliesTeamStats((_prev) => calculateTeamStats(enemiesTeamMap));

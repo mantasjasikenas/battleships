@@ -1,10 +1,13 @@
+import { PlayerService } from '@/services/PlayerService/PlayerService';
 import { AmmoType } from '../../../models/Ammo';
-import { Player, PlayerTeam } from '../../../models/Player';
+import { invertTeam, Player, PlayerTeam } from '../../../models/Player';
 import HubConnectionService, {
   MatchEventNames,
 } from '../../HubConnectionService/HubConnectionService';
 import MatchProvider from '../../MatchProvider/MatchProvider';
 import AsciiEmojiParser  from 'ascii-emoji-parser';
+import { MapTile } from '@/models/MatchMap';
+import { toast } from 'sonner';
 
 export interface CommsEventProps {
   player: Player;
@@ -42,6 +45,12 @@ export class Interpreter implements IInterpreter {
       case '/attack': {
         return this.tryResolveAttackCommandExpression(tokens);
       }
+      case '/place-ship': {
+        return this.tryResolvePlaceCommandExpression(tokens);
+      }
+      case '/undo': {
+        return this.tryResolveUndoCommandExpression(tokens);
+      }
       case '/emote': {
         return this.tryResolveEmoteCommandExpression(tokens);
       }
@@ -49,21 +58,47 @@ export class Interpreter implements IInterpreter {
         return this.tryResolveMessageCommandExpression(tokens);
       }
       default: {
+        toast.error("No such command");
         return undefined;
       }
     }
   }
-
-  private tryResolveAttackCommandExpression(
+  private tryResolvePlaceCommandExpression(
     tokens: string[]
   ): (() => void) | undefined {
     if (tokens.length < 4) {
+      toast.error("missing parrameters");
+      return undefined;
+    }
+
+    const executable = this.getPlaceCommandExecutable();
+
+    return () => executable(Number(tokens[2]), Number(tokens[3]), Number(tokens[1]));
+  }
+
+  private tryResolveUndoCommandExpression(
+    tokens: string[]
+  ): (() => void) | undefined {
+    if (tokens.length < 1) {
+      toast.error("missing parrameters");
+      return undefined;
+    }
+
+    const executable = this.getUndoCommandExecutable();
+
+    return () => executable();
+  }
+
+  private tryResolveAttackCommandExpression(tokens: string[]): (() => void) | undefined {
+    if (tokens.length < 4) {
+      toast.error("missing parrameters");
       return undefined;
     }
 
     const ammoType = this.tryResolveAmmoType(tokens[1]);
 
     if (ammoType == null) {
+      toast.error("Ammo type not found");
       return undefined;
     }
 
@@ -119,7 +154,51 @@ export class Interpreter implements IInterpreter {
 
     return index;
   }
+  private getPlaceCommandExecutable(): (
+    posX: number,
+    posY: number,
+    alignment: number
+  ) => void {
+    return (posX: number, posY: number, alignment: number) => {
+      const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
+      const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
 
+      if (!currentPlayer) {
+        toast.error("Player not found");
+        return;
+      }
+      if(alignment !== 0 && alignment !== 1){
+        toast.error("No such alignment");
+        return;
+      }
+
+      HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
+        placerId: currentPlayer.id,
+        placerTeam: currentPlayer.team,
+        tile: new MapTile(posX, posY),
+        alignment: alignment,
+        ships: currentPlayer.ships,
+      });
+    };
+  }
+
+  private getUndoCommandExecutable():() => void{
+    return () => {
+      const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
+      const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
+
+      if (!currentPlayer) {
+        toast.error("Player not found");
+        return;
+      }
+
+      const data: any = {
+        userId: currentPlayer.id,
+      };
+
+      HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, data);
+    };
+  }
   private getAttackCommandExecutable(): (
     posX: number,
     posY: number,
@@ -127,23 +206,22 @@ export class Interpreter implements IInterpreter {
   ) => void {
     return (posX: number, posY: number, ammoType: AmmoType) => {
       const match = MatchProvider.Instance.match;
+      const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
+      const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
+      const currentPlayerTeam = currentPlayer.team;
+      const enemyTeam = invertTeam(currentPlayerTeam);
+      const enemiesTeamMap = match.teamsMap.get(enemyTeam)!;
 
-      const player = match.players.find(
-        (p) => p.team === PlayerTeam.FirstTeam
-      )!;
-      const enemy = match.players.find(
-        (p) => p.team === PlayerTeam.SecondTeam
-      )!;
-
-      if (!player || !enemy) {
+      if (!currentPlayer || !enemiesTeamMap) {
+        toast.error("Player or enemie not found");
         return;
       }
 
-      /*  const tile = enemy.map.tiles[posX][posY];
+      const tile = enemiesTeamMap?.tiles[posX][posY];
 
       const data: any = {
-        offenceTeam: player.id,
-        defenceTeam: enemy.id,
+        attackerId: currentPlayer.id,
+        attackerTeam: currentPlayerTeam,
         tile: tile,
         ammoType: ammoType,
       };
@@ -151,7 +229,7 @@ export class Interpreter implements IInterpreter {
       HubConnectionService.Instance.sendEvent(
         MatchEventNames.AttackPerformed,
         data
-      ); */
+      );
     };
   }
 
