@@ -268,7 +268,7 @@ export default function ShipPlacement() {
         placerTeam: currentPlayer.team,
         tile: selectedTile,
         alignment: selectedAlignment,
-        ships: currentPlayer.ships,
+        ships: currentPlayer.ships.map(ship => (ship as any).decoratedShip || ship),
       });
       rerender();
     }

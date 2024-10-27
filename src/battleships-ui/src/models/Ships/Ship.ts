@@ -1,4 +1,6 @@
 import Vehicle from '../Vehicle';
+import { ColorShipPartDecorator } from './ColorShipPartDecorator';
+import { NamingShipPartDecorator } from './NamingShipPartDecorator';
 import { ShipClass } from './ShipClass';
 import {
   ClassicShipPart,
@@ -6,6 +8,7 @@ import {
   // ObservingShipPart,
   ShipPart,
 } from './ShipPart';
+import { VisibilityShipPartDecorator } from './VisibilityShipPartDecorator';
 
 export enum ShipPartType {
   Classic,
@@ -16,7 +19,7 @@ export enum ShipPartType {
 export default abstract class Ship extends Vehicle {
   readonly forwardTravelDistance = 1;
   readonly shipClass!: ShipClass;
-  readonly parts!: ShipPart[];
+  abstract readonly parts: ShipPart[];
 }
 
 export abstract class Carrier extends Ship {
@@ -42,15 +45,37 @@ export abstract class Speedboat extends Ship {
 export function createParts(
   amount: number,
   type: ShipPartType,
-  shipClass: ShipClass
+  shipClass: ShipClass,
+  shipPartName: string,
+  shipPartColor: string,
+  shipPartVisibility: number
 ): ShipPart[] {
   const result: ShipPart[] = [];
   
-  result.push(createPart(type, shipClass));
+  // Create the initial decorated part
+  // const basePart = redecorateShipPart(
+  //   new ClassicShipPart(shipClass),
+  //   shipPartName,
+  //   shipPartColor,
+  //   shipPartVisibility
+  // );
+
+  const basePart = createPart(type, shipClass);
+
+  // push the first part and create shallow copies with re-decoration for each part
+  result.push(redecorateShipPart(basePart, shipPartName + 1, shipPartColor, shipPartVisibility));
   for (let i = 1; i < amount; i++) {
-    result.push(result[0].shalowCopy());
+    const copiedPart = basePart.shalowCopy();
+    result.push(redecorateShipPart(copiedPart, shipPartName + (i + 1), shipPartColor, shipPartVisibility));
   }
+  
   return result;
+}
+
+function redecorateShipPart(part: ShipPart, name: string, color: string, visibility: number): ShipPart {
+  const namedPart = new NamingShipPartDecorator(part, name);
+  const coloredPart = new ColorShipPartDecorator(namedPart, color);
+  return new VisibilityShipPartDecorator(coloredPart, visibility);
 }
 
 export function createPart(type: ShipPartType, shipClass: ShipClass) {
