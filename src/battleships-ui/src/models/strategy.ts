@@ -1,5 +1,5 @@
 import MatchProvider from "@/services/MatchProvider/MatchProvider";
-import { Ammo } from "./Ammo";
+import { Ammo, AmmoType } from "./Ammo";
 import MatchMap, { MapTile } from "./MatchMap";
 import { ShipClass } from "./Ships/ShipClass";
 import { ModularShipPart } from "./Ships/ShipPart";
@@ -19,8 +19,20 @@ export class Context {
 export interface Strategy {
   Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void;
 }
-export class classicAttackStrategy implements Strategy {
+// DESIGN PATTERN: Adapter
+export class AreaAttackAdapter implements Strategy{
+  private strategy: AreaStrategy;
+  constructor(strategy: AreaStrategy){
+    this.strategy = strategy;
+  }
   Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+    this.strategy.SetBaseAttack(ammo);
+    this.strategy.AreaAttack(ammo, tile, map);
+  }
+}
+
+export class classicAttackStrategy implements Strategy {
+  Attack(_ammo: Ammo, tile: MapTile, _map: MatchMap): void {
     AttackInfo.baseAttack(tile);
 
     if (!!tile.shipPart) {
@@ -58,9 +70,11 @@ export class armorPiercingAttackStrategy implements Strategy {
   }
 }
 
-export class highExplosiveAttackStrategy implements Strategy {
-  Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-    const attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
+export class AreaStrategy{
+  attack = (_ammo: Ammo, _tile: MapTile, _map: MatchMap) => {};
+  SetBaseAttack(ammo:Ammo): void {
+    if(ammo.type === AmmoType.HighExplosive){
+    this.attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
       AttackInfo.baseAttack(tile);
 
       if (!AttackInfo.isSurfaceAttackPossible(tile.shipPart?.shipClass)) {
@@ -69,26 +83,48 @@ export class highExplosiveAttackStrategy implements Strategy {
 
       AttackInfo.damageAttack(ammo, tile, map);
     };
-
-    AttackInfo.areaAttack(ammo, tile, map, attack);
+    }
+    else if(ammo.type === AmmoType.DepthCharge){
+      this.attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
+        AttackInfo.baseAttack(tile);
+  
+        if (!AttackInfo.isUnderwaterAttackPossible(tile.shipPart?.shipClass)) {
+          return;
+        }
+  
+        AttackInfo.damageAttack(ammo, tile, map);
+      };
+    }
   }
-}
+  AreaAttack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+    for (
+      let i = tile.x - (ammo.impactRadius - 1);
+      i < tile.x + ammo.impactRadius;
+      i++
+    ) {
+      for (
+        let j = tile.y - (ammo.impactRadius - 1);
+        j < tile.y + ammo.impactRadius;
+        j++
+      ) {
+        if (i < 0 || i >= map.tiles.length || j < 0 || j >= map.tiles.length) {
+          continue;
+        }
 
-export class depthChargeAttackStrategy implements Strategy {
-  Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-    const attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
-      AttackInfo.baseAttack(tile);
-
-      if (!AttackInfo.isUnderwaterAttackPossible(tile.shipPart?.shipClass)) {
-        return;
+        const tile = map.tiles[i][j];
+        this.attack(ammo, tile, map);
       }
-
-      AttackInfo.damageAttack(ammo, tile, map);
-    };
-
-    AttackInfo.areaAttack(ammo, tile, map, attack);
+    }
   }
 }
+
+// export class depthChargeAttackStrategy extends AreaStrategy {
+//   SetBaseAttack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+    
+
+//     AttackInfo.areaAttack(ammo, tile, map, attack);
+//   }
+// }
 
 class AttackInfo {
   static isAttackPossible(
@@ -117,7 +153,7 @@ class AttackInfo {
     tile.isAttacked = true;
   }
 
-  static damageAttack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+  static damageAttack(ammo: Ammo, tile: MapTile, _map: MatchMap): void {
     if (!!tile.shipPart) {
       const shipPart = tile.shipPart as ModularShipPart;
 
@@ -131,31 +167,31 @@ class AttackInfo {
     }
   }
 
-  static areaAttack(
-    ammo: Ammo,
-    tile: MapTile,
-    map: MatchMap,
-    baseAttack: (ammo: Ammo, tile: MapTile, map: MatchMap) => void,
-  ): void {
-    for (
-      let i = tile.x - (ammo.impactRadius - 1);
-      i < tile.x + ammo.impactRadius;
-      i++
-    ) {
-      for (
-        let j = tile.y - (ammo.impactRadius - 1);
-        j < tile.y + ammo.impactRadius;
-        j++
-      ) {
-        if (i < 0 || i >= map.tiles.length || j < 0 || j >= map.tiles.length) {
-          continue;
-        }
+  // static areaAttack(
+  //   ammo: Ammo,
+  //   tile: MapTile,
+  //   map: MatchMap,
+  //   baseAttack: (ammo: Ammo, tile: MapTile, map: MatchMap) => void,
+  // ): void {
+  //   for (
+  //     let i = tile.x - (ammo.impactRadius - 1);
+  //     i < tile.x + ammo.impactRadius;
+  //     i++
+  //   ) {
+  //     for (
+  //       let j = tile.y - (ammo.impactRadius - 1);
+  //       j < tile.y + ammo.impactRadius;
+  //       j++
+  //     ) {
+  //       if (i < 0 || i >= map.tiles.length || j < 0 || j >= map.tiles.length) {
+  //         continue;
+  //       }
 
-        const tile = map.tiles[i][j];
-        baseAttack(ammo, tile, map);
-      }
-    }
-  }
+  //       const tile = map.tiles[i][j];
+  //       baseAttack(ammo, tile, map);
+  //     }
+  //   }
+  // }
 
   static cooldownAttack(
     ammo: Ammo,
