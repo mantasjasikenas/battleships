@@ -19,7 +19,7 @@ export class Context {
 export interface Strategy {
   Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void;
 }
-
+// DESIGN PATTERN: Adapter
 export class AreaAttackAdapter implements Strategy{
   private strategy: AreaStrategy;
   constructor(strategy: AreaStrategy){
