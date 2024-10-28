@@ -6,9 +6,9 @@ import {
   armorPiercingAttackStrategy,
   classicAttackStrategy,
   Context,
-  depthChargeAttackStrategy,
-  highExplosiveAttackStrategy,
+  AreaAttackAdapter,
   standardAttackStrategy,
+  AreaStrategy,
 } from "../../models/strategy";
 export interface AttackTurnEventProps {
   attackerId: number;
@@ -42,11 +42,9 @@ export class AttackHandlerService {
       case AmmoType.ArmorPiercing:
         Context.setStrategy(new armorPiercingAttackStrategy());
         break;
-      case AmmoType.HighExplosive:
-        Context.setStrategy(new highExplosiveAttackStrategy());
-        break;
-      case AmmoType.DepthCharge:
-        Context.setStrategy(new depthChargeAttackStrategy());
+      case AmmoType.HighExplosive || AmmoType.DepthCharge:
+        const adapter = new AreaAttackAdapter(new AreaStrategy())
+        Context.setStrategy(adapter);
     }
 
     return (tile: MapTile, map: MatchMap) =>
