@@ -64,7 +64,6 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
 }
 
 export enum MatchEventNames {
-  NewMatch,
   MatchCreated,
   PlayerJoined,
   PlayerLockedInSettings,

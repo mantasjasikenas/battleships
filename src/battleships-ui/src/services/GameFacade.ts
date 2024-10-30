@@ -87,5 +87,7 @@ export default class GameFacade {
 
   resetMatch() {
     MatchProvider.reset();
+    PlayerService.removeFromSessionStorage();
+    HubConnectionService.Instance.clearAll();
   }
 }

@@ -1,5 +1,5 @@
-import { MatchEventNames } from '../../HubConnectionService/HubConnectionService';
-import MatchEventsCallbackInvokeable from './MatchEventsInvokeable';
+import { MatchEventNames } from "../../HubConnectionService/HubConnectionService";
+import MatchEventsCallbackInvokeable from "./MatchEventsInvokeable";
 
 // DESIGN PATTERN: Observer
 export default class MatchEventsCallbackHandler {
@@ -8,13 +8,7 @@ export default class MatchEventsCallbackHandler {
   } = {};
 
   constructor() {
-    for (const event in MatchEventNames) {
-      if (isNaN(Number(event))) {
-        break;
-      }
-
-      this.invokeables[event] = [];
-    }
+    this.initializeInvokeables();
   }
 
   public notify(event: MatchEventNames, data: any): void {
@@ -35,5 +29,19 @@ export default class MatchEventsCallbackHandler {
 
   public remove(event: MatchEventNames) {
     this.invokeables[event] = [];
+  }
+
+  public clearAll() {
+    this.initializeInvokeables();
+  }
+
+  private initializeInvokeables() {
+    for (const event in MatchEventNames) {
+      if (isNaN(Number(event))) {
+        break;
+      }
+
+      this.invokeables[event] = [];
+    }
   }
 }

@@ -45,12 +45,16 @@ export default function ShipPlacement() {
       MatchEventNames.ShipsPlaced,
       placeShip,
     );
-  }, []);
-  useEffect(() => {
+
     HubConnectionService.Instance.addSingular(
       MatchEventNames.UndoCommand,
       Undo,
     );
+
+    // return () => {
+    //   HubConnectionService.Instance.remove(MatchEventNames.ShipsPlaced);
+    //   HubConnectionService.Instance.remove(MatchEventNames.UndoCommand);
+    // };
   }, []);
 
   const renderLegend = () => {
@@ -115,11 +119,21 @@ export default function ShipPlacement() {
         </div>
 
         <div className="mt-8 flex justify-center gap-2">
-          <Button disabled={!selectedTile} onClick={() => onPlace()}>Place</Button>
+          <Button disabled={!selectedTile} onClick={() => onPlace()}>
+            Place
+          </Button>
           <Button onClick={() => onRandom()}>Place randomly</Button>
-          <Button 
-          disabled={currentPlayer.invoker.commands.length < 1}
-          onClick={() => HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {userId: currentPlayerId})}>Undo</Button>
+          <Button
+            disabled={currentPlayer.invoker.commands.length < 1}
+            onClick={() =>
+              HubConnectionService.Instance.sendEvent(
+                MatchEventNames.UndoCommand,
+                { userId: currentPlayerId },
+              )
+            }
+          >
+            Undo
+          </Button>
         </div>
       </div>
     </div>
@@ -195,7 +209,6 @@ export default function ShipPlacement() {
 
       validNr++;
 
-      
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
@@ -262,13 +275,15 @@ export default function ShipPlacement() {
           }
         }
       }
-      
+
       HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
         tile: selectedTile,
         alignment: selectedAlignment,
-        ships: currentPlayer.ships.map(ship => (ship as any).decoratedShip || ship),
+        ships: currentPlayer.ships.map(
+          (ship) => (ship as any).decoratedShip || ship,
+        ),
       });
       rerender();
     }
@@ -280,25 +295,25 @@ export default function ShipPlacement() {
 
     const placer = match.players.find((player) => player.id === placerId)!;
 
-    const currentMap = match.teamsMap.get(placerTeam)!;
-
     const otherTeam =
       placerTeam === PlayerTeam.FirstTeam
         ? PlayerTeam.SecondTeam
         : PlayerTeam.FirstTeam;
 
     const otherMap = match.teamsMap.get(otherTeam);
-    placer.invoker.execute(new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships));
+    placer.invoker.execute(
+      new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships),
+    );
 
     if (placer.placedShips >= ships.length && otherMap?.shipsPlaced === true) {
       navigate("/match/");
-    } 
+    }
 
     rerender();
   }
 
-  function Undo(data: any){
-    const { userId } = data; 
+  function Undo(data: any) {
+    const { userId } = data;
     const user = match.players.find((player) => player.id === userId)!;
     user.invoker.undo();
     rerender();

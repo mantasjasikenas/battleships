@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLoaderData, useNavigate } from "react-router-dom";
-import { Match } from "../../../models/Match";
+import { useNavigate } from "react-router-dom";
 import MatchSettings from "../../../models/MatchSettings";
 import { Player } from "../../../models/Player";
 import { AttackTurn } from "../../../models/Turns/AttackTurn";
@@ -27,14 +26,13 @@ const minRequiredPlayers: number = 2;
 export default function Pregame() {
   const navigate = useNavigate();
 
-  const match = useLoaderData() as Match;
+  const gameFacade = GameFacade.Instance;
+  const match = gameFacade.getMatch();
 
   const [_, setRerenderToggle] = useState(0);
   const [readyPlayerIds, setReadyPlayerIds] = useState([] as number[]);
 
   const currentPlayer = PlayerService.getFromSessionStorage()!;
-
-  const gameFacade = GameFacade.Instance;
 
   useEffect(() => {
     gameFacade.addEventObservers({

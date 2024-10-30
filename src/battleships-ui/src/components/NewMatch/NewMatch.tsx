@@ -1,7 +1,5 @@
 import { generatePath, useNavigate } from "react-router-dom";
-import HubConnectionService, {
-  MatchEventNames,
-} from "../../services/HubConnectionService/HubConnectionService";
+import { MatchEventNames } from "../../services/HubConnectionService/HubConnectionService";
 import { PlayerService } from "../../services/PlayerService/PlayerService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import GameFacade from "@/services/GameFacade";
 
 const FormSchema = z.object({
   username: z.string().min(2, {
@@ -26,6 +25,8 @@ const FormSchema = z.object({
 
 export default function NewMatch() {
   const navigate = useNavigate();
+
+  const gameFacade = GameFacade.Instance;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -41,11 +42,9 @@ export default function NewMatch() {
 
     PlayerService.saveToSessionStorage(player);
 
-    HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerJoined, {
+    gameFacade.sendEvent(MatchEventNames.PlayerJoined, {
       player: player,
     });
-
-    HubConnectionService.Instance.sendEvent(MatchEventNames.NewMatch);
 
     const path = generatePath("match/pregame");
 

@@ -18,6 +18,10 @@ export class PlayerService {
     );
   }
 
+  static removeFromSessionStorage() {
+    sessionStorage.removeItem(this.LOCAL_STORAGE_PLAYER_KEY);
+  }
+
   static getFromSessionStorage(): Player | undefined {
     const value = sessionStorage.getItem(this.LOCAL_STORAGE_PLAYER_KEY);
 
