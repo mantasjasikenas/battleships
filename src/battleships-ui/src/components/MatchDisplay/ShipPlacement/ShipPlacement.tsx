@@ -3,18 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { Label } from "@radix-ui/react-label";
 import { MapTile } from "../../../models/MatchMap";
 import { PlayerTeam } from "../../../models/Player";
-import HubConnectionService, {
-  MatchEventNames,
-} from "../../../services/HubConnectionService/HubConnectionService";
-import MatchProvider from "../../../services/MatchProvider/MatchProvider";
+import { MatchEventNames } from "../../../services/HubConnectionService/HubConnectionService";
 import MapGrid from "../MapGrid/MapGrid";
 import { toast } from "sonner";
-import { PlayerService } from "../../../services/PlayerService/PlayerService";
 import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { TileColor } from "@/models/Map/TileColors";
 import { ShipFactoryCreator } from "@/services/MatchService/ShipFactory";
 import { PlaceShipCommand } from "@/models/command";
+import GameFacade from "@/services/GameFacade";
 
 export default function ShipPlacement() {
   const navigate = useNavigate();
@@ -23,38 +20,28 @@ export default function ShipPlacement() {
 
   const [selectedAlignment, setSelectedAlignment] = useState(0);
 
-  const match = MatchProvider.Instance.match;
+  const gameFacade = GameFacade.Instance;
+  const match = gameFacade.getMatch();
 
   const shipsFactory = ShipFactoryCreator.getShipFactory(
     match.settings.gameMode,
   );
 
-  const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
-  const currentPlayer = match.players.find(
-    (player) => player.id === currentPlayerId,
-  )!;
+  const currentPlayerId = gameFacade.getPlayerFromSessionStorage()!.id;
+  const currentPlayer = gameFacade.getMatchPlayer(currentPlayerId)!;
 
   currentPlayer.ships = shipsFactory.createShips();
 
-  const currentPlayerTeam = currentPlayer.team;
-
-  const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
+  const alliesTeamMap = gameFacade.getTeamMap(currentPlayer.team)!;
 
   useEffect(() => {
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.ShipsPlaced,
-      placeShip,
-    );
+    gameFacade.addSingularEventObserver(MatchEventNames.ShipsPlaced, placeShip);
+    gameFacade.addSingularEventObserver(MatchEventNames.UndoCommand, Undo);
 
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.UndoCommand,
-      Undo,
-    );
-
-    // return () => {
-    //   HubConnectionService.Instance.remove(MatchEventNames.ShipsPlaced);
-    //   HubConnectionService.Instance.remove(MatchEventNames.UndoCommand);
-    // };
+    return () => {
+      gameFacade.removeEventObserver(MatchEventNames.ShipsPlaced);
+      gameFacade.removeEventObserver(MatchEventNames.UndoCommand);
+    };
   }, []);
 
   const renderLegend = () => {
@@ -126,10 +113,9 @@ export default function ShipPlacement() {
           <Button
             disabled={currentPlayer.invoker.commands.length < 1}
             onClick={() =>
-              HubConnectionService.Instance.sendEvent(
-                MatchEventNames.UndoCommand,
-                { userId: currentPlayerId },
-              )
+              gameFacade.sendEvent(MatchEventNames.UndoCommand, {
+                userId: currentPlayerId,
+              })
             }
           >
             Undo
@@ -209,7 +195,7 @@ export default function ShipPlacement() {
 
       validNr++;
 
-      HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
+      gameFacade.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
         tile: new MapTile(x, y),
@@ -276,7 +262,7 @@ export default function ShipPlacement() {
         }
       }
 
-      HubConnectionService.Instance.sendEvent(MatchEventNames.ShipsPlaced, {
+      gameFacade.sendEvent(MatchEventNames.ShipsPlaced, {
         placerId: currentPlayer.id,
         placerTeam: currentPlayer.team,
         tile: selectedTile,
@@ -285,6 +271,7 @@ export default function ShipPlacement() {
           (ship) => (ship as any).decoratedShip || ship,
         ),
       });
+
       rerender();
     }
     return;
@@ -293,14 +280,15 @@ export default function ShipPlacement() {
   function placeShip(data: any): void {
     const { placerId, placerTeam, tile, alignment, ships } = data;
 
-    const placer = match.players.find((player) => player.id === placerId)!;
+    const placer = gameFacade.getMatchPlayer(placerId)!;
 
     const otherTeam =
       placerTeam === PlayerTeam.FirstTeam
         ? PlayerTeam.SecondTeam
         : PlayerTeam.FirstTeam;
 
-    const otherMap = match.teamsMap.get(otherTeam);
+    const otherMap = gameFacade.getTeamMap(otherTeam);
+
     placer.invoker.execute(
       new PlaceShipCommand(placerId, placerTeam, tile, alignment, ships),
     );
@@ -314,8 +302,10 @@ export default function ShipPlacement() {
 
   function Undo(data: any) {
     const { userId } = data;
-    const user = match.players.find((player) => player.id === userId)!;
+    const user = gameFacade.getMatchPlayer(userId)!;
+
     user.invoker.undo();
+
     rerender();
   }
 
