@@ -3,24 +3,20 @@ import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
 import { invertTeam, PlayerTeam } from "../../models/Player";
 import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
-import HubConnectionService, {
-  MatchEventNames,
-} from "../../services/HubConnectionService/HubConnectionService";
-import MatchProvider from "../../services/MatchProvider/MatchProvider";
+import { MatchEventNames } from "../../services/HubConnectionService/HubConnectionService";
 import AmmoRack from "./AmmoRack/AmmoRack";
 import MapGrid from "./MapGrid/MapGrid";
 import { AttackTurn } from "../../models/Turns/AttackTurn";
 import { toast } from "sonner";
-import { PlayerService } from "../../services/PlayerService/PlayerService";
 import { Button } from "../ui/button";
 import MatchTimer from "../MatchTimer";
 import PlayerList from "./PlayerList";
 import GameLegend from "./GameLegend";
 import { useNavigate } from "react-router-dom";
-import { MatchService } from "@/services/MatchService/MatchService";
 import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
 import { AttackCommand } from "@/models/command";
+import GameFacade from "@/services/GameFacade";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -30,19 +26,20 @@ export default function MatchDisplay() {
   const [gameOver, setGameOver] = useState(false);
   const [gaveUpPlayers, setGaveUpPlayers] = useState([] as number[]);
 
-  const match = MatchProvider.Instance.match;
+  const gameFacade = GameFacade.Instance;
+  const match = gameFacade.getMatch();
 
-  const currentPlayerId = PlayerService.getFromSessionStorage()!!.id;
-  const currentPlayer = MatchProvider.getPlayer(currentPlayerId)!;
+  const currentPlayerId = gameFacade.getPlayerFromSessionStorage()!.id;
+  const currentPlayer = gameFacade.getMatchPlayer(currentPlayerId)!;
 
   const currentPlayerTeam = currentPlayer.team;
   const enemyTeam = invertTeam(currentPlayerTeam);
 
-  const alliesTeamPlayers = MatchProvider.getTeamPlayers(currentPlayerTeam);
-  const enemiesTeamPlayers = MatchProvider.getTeamPlayers(enemyTeam);
+  const alliesTeamPlayers = gameFacade.getMatchTeamPlayers(currentPlayerTeam);
+  const enemiesTeamPlayers = gameFacade.getMatchTeamPlayers(enemyTeam);
 
-  const alliesTeamMap = match.teamsMap.get(currentPlayerTeam)!;
-  const enemiesTeamMap = match.teamsMap.get(enemyTeam)!;
+  const alliesTeamMap = gameFacade.getTeamMap(currentPlayerTeam)!;
+  const enemiesTeamMap = gameFacade.getTeamMap(enemyTeam)!;
 
   const [activePlayer, setActivePlayer] = useState(
     match.players.find((player) => player.attackTurns.length > 0)!,
@@ -62,7 +59,7 @@ export default function MatchDisplay() {
   );
 
   useEffect(() => {
-    const turnEndTime = Date.now() + 60 * 1000; // 1 minute
+    const turnEndTime = Date.now() + 60 * 1000;
 
     const turnTimerId = setInterval(() => {
       const remaining = Math.max(
@@ -73,14 +70,14 @@ export default function MatchDisplay() {
 
       if (remaining === 0) {
         clearInterval(turnTimerId);
-        // Automatically switch turn when the time is up
+
         switchTurn(activePlayer.id);
         toast.error("Time's up!");
       }
     }, 1000);
 
-    return () => clearInterval(turnTimerId); // Cleanup on component unmount
-  }, [activePlayer]); // Reset the timer when the active player changes
+    return () => clearInterval(turnTimerId);
+  }, [activePlayer]);
 
   useEffect(() => {
     if (activePlayer.id === currentPlayer.id) {
@@ -89,46 +86,32 @@ export default function MatchDisplay() {
   }, [activePlayer]);
 
   useEffect(() => {
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.AttackPerformed,
-      handleAttackTurnEvent,
+    gameFacade.addEventObservers(
+      {
+        [MatchEventNames.AttackPerformed]: handleAttackTurnEvent,
+        [MatchEventNames.UndoCommand]: handleUndoCommandEvent,
+        [MatchEventNames.PlayerGaveUp]: handlePlayerGaveUpEvent,
+        [MatchEventNames.PlayerLeft]: handlePlayerLeftEvent,
+      },
+      true,
     );
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.UndoCommand,
-      handleUndoCommandEvent,
-    );
-
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.PlayerGaveUp,
-      handlePlayerGaveUpEvent,
-    );
-
-    HubConnectionService.Instance.addSingular(
-      MatchEventNames.PlayerLeft,
-      handlePlayerLeftEvent,
-    );
-
-    // function handleKeyDown(e: KeyboardEvent) {
-    //   if (e.key === "Enter") {
-    //     onAttack();
-    //   }
-    // }
 
     function unloadCallback(_e: BeforeUnloadEvent) {
-      HubConnectionService.Instance.remove(MatchEventNames.AttackPerformed);
-      HubConnectionService.Instance.remove(MatchEventNames.PlayerGaveUp);
-      HubConnectionService.Instance.remove(MatchEventNames.PlayerLeft);
+      gameFacade.removeEventObservers([
+        MatchEventNames.AttackPerformed,
+        MatchEventNames.PlayerGaveUp,
+        MatchEventNames.PlayerLeft,
+        MatchEventNames.UndoCommand,
+      ]);
 
-      HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerLeft, {
+      gameFacade.sendEvent(MatchEventNames.PlayerLeft, {
         playerId: currentPlayer.id,
       });
     }
 
-    // document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("beforeunload", unloadCallback);
 
     return () => {
-      // document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeunload", unloadCallback);
     };
   }, []);
@@ -213,8 +196,11 @@ export default function MatchDisplay() {
             Attack!
           </Button>
           <Button
-          disabled={currentPlayer.invoker.commands.length < 1}
-          onClick={() => onUndo()}>Undo</Button>
+            disabled={currentPlayer.invoker.commands.length < 1}
+            onClick={() => onUndo()}
+          >
+            Undo
+          </Button>
         </div>
       </div>
     </div>
@@ -266,7 +252,7 @@ export default function MatchDisplay() {
       return;
     }
 
-    HubConnectionService.Instance.sendEvent(MatchEventNames.AttackPerformed, {
+    gameFacade.sendEvent(MatchEventNames.AttackPerformed, {
       attackerId: currentPlayer.id,
       attackerTeam: currentPlayer.team,
       tile: turn.tile,
@@ -277,13 +263,13 @@ export default function MatchDisplay() {
   }
 
   function onUndo(): void {
-    HubConnectionService.Instance.sendEvent(MatchEventNames.UndoCommand, {
+    gameFacade.sendEvent(MatchEventNames.UndoCommand, {
       userId: currentPlayerId,
     });
   }
 
   function onGaveUp(): void {
-    HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerGaveUp, {
+    gameFacade.sendEvent(MatchEventNames.PlayerGaveUp, {
       playerId: currentPlayer.id,
     });
   }
@@ -299,7 +285,7 @@ export default function MatchDisplay() {
   function onGameOver(winningTeam: PlayerTeam | null): void {
     setGameOver(true);
 
-    MatchProvider.reset();
+    gameFacade.resetMatch();
 
     navigate("/gameover", {
       state: { winningTeam },
@@ -373,7 +359,7 @@ export default function MatchDisplay() {
   function handlePlayerGaveUpEvent(data: any): void {
     const { playerId } = data as { playerId: number };
 
-    const player = MatchProvider.getPlayer(playerId);
+    const player = gameFacade.getMatchPlayer(playerId);
 
     if (!player) {
       console.error(`Player with ID ${playerId} not found.`);
@@ -385,7 +371,7 @@ export default function MatchDisplay() {
     setGaveUpPlayers((prev) => {
       const updatedGaveUpPlayers = [...prev, playerId];
 
-      const teamPlayers = MatchProvider.getTeamPlayers(player.team);
+      const teamPlayers = gameFacade.getMatchTeamPlayers(player.team);
       const teamGaveUp = teamPlayers.every((teamPlayer) =>
         updatedGaveUpPlayers.includes(teamPlayer.id),
       );
@@ -401,7 +387,7 @@ export default function MatchDisplay() {
   function handlePlayerLeftEvent(data: any): void {
     const { playerId } = data as { playerId: number };
 
-    const player = MatchProvider.getPlayer(playerId);
+    const player = gameFacade.getMatchPlayer(playerId);
 
     if (!player) {
       console.error(`Player with ID ${playerId} not found.`);
@@ -410,7 +396,7 @@ export default function MatchDisplay() {
 
     toast.success(`Player ${player.name} [${player.id}] left the match!`);
 
-    MatchService.removePlayerFromMatch(playerId);
+    gameFacade.remotePlayerFromMatch(playerId);
 
     if (activePlayer.id === playerId) {
       switchTurn(playerId);
@@ -418,7 +404,7 @@ export default function MatchDisplay() {
       rerender();
     }
 
-    const teamPlayers = MatchProvider.getTeamPlayers(player.team);
+    const teamPlayers = gameFacade.getMatchTeamPlayers(player.team);
 
     if (teamPlayers.length === 0) {
       onGameOver(invertTeam(player.team));

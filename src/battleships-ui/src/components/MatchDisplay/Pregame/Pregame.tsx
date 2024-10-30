@@ -4,9 +4,7 @@ import { Match } from "../../../models/Match";
 import MatchSettings from "../../../models/MatchSettings";
 import { Player } from "../../../models/Player";
 import { AttackTurn } from "../../../models/Turns/AttackTurn";
-import HubConnectionService, {
-  MatchEventNames,
-} from "../../../services/HubConnectionService/HubConnectionService";
+import { MatchEventNames } from "../../../services/HubConnectionService/HubConnectionService";
 import { MatchService } from "../../../services/MatchService/MatchService";
 import { PlayerService } from "../../../services/PlayerService/PlayerService";
 import MatchSettingsConfig from "../MatchSettings/MatchSettings";
@@ -21,8 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import MatchProvider from "@/services/MatchProvider/MatchProvider";
 import { toast } from "sonner";
+import GameFacade from "@/services/GameFacade";
 
 const minRequiredPlayers: number = 2;
 
@@ -36,23 +34,17 @@ export default function Pregame() {
 
   const currentPlayer = PlayerService.getFromSessionStorage()!;
 
+  const gameFacade = GameFacade.Instance;
+
   useEffect(() => {
-    HubConnectionService.Instance.add(
-      MatchEventNames.PlayerJoined,
-      handlePlayerJoinedEvent,
-    );
-    HubConnectionService.Instance.add(
-      MatchEventNames.PlayerUpdatedMatchSettings,
-      handleMatchSettingsChangedEvent,
-    );
-    HubConnectionService.Instance.add(
-      MatchEventNames.PlayerLockedInSettings,
-      handlePlayerLockedInSettingsEvent,
-    );
-    HubConnectionService.Instance.add(
-      MatchEventNames.PlayerLeftLobby,
-      handlePlayerLeftLobbyEvent,
-    );
+    gameFacade.addEventObservers({
+      [MatchEventNames.PlayerJoined]: handlePlayerJoinedEvent,
+      [MatchEventNames.PlayerUpdatedMatchSettings]:
+        handleMatchSettingsChangedEvent,
+      [MatchEventNames.PlayerLockedInSettings]:
+        handlePlayerLockedInSettingsEvent,
+      [MatchEventNames.PlayerLeftLobby]: handlePlayerLeftLobbyEvent,
+    });
 
     function handleKeyDown(e: KeyboardEvent) {
       if (match.players.length >= minRequiredPlayers && e.key === "Enter") {
@@ -61,16 +53,14 @@ export default function Pregame() {
     }
 
     function unloadCallback(_e: BeforeUnloadEvent) {
-      HubConnectionService.Instance.remove(MatchEventNames.PlayerJoined);
-      HubConnectionService.Instance.remove(
+      gameFacade.removeEventObservers([
+        MatchEventNames.PlayerJoined,
         MatchEventNames.PlayerUpdatedMatchSettings,
-      );
-      HubConnectionService.Instance.remove(
         MatchEventNames.PlayerLockedInSettings,
-      );
-      HubConnectionService.Instance.remove(MatchEventNames.PlayerLeftLobby);
+        MatchEventNames.PlayerLeftLobby,
+      ]);
 
-      HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerLeftLobby, {
+      gameFacade.sendEvent(MatchEventNames.PlayerLeftLobby, {
         playerId: currentPlayer.id,
       });
     }
@@ -145,17 +135,16 @@ export default function Pregame() {
   );
 
   function onStartMatchButtonClick(): void {
-    const currentPlayer = PlayerService.getFromSessionStorage();
+    const currentPlayer = gameFacade.getPlayerFromSessionStorage();
 
-    HubConnectionService.Instance.sendEvent(
-      MatchEventNames.PlayerLockedInSettings,
-      { player: currentPlayer },
-    );
+    gameFacade.sendEvent(MatchEventNames.PlayerLockedInSettings, {
+      player: currentPlayer,
+    });
   }
 
   function handlePlayerJoinedEvent(data: any): void {
     const newlyJoinedPlayer = new Player(data.player);
-    const currentPlayer = PlayerService.getFromSessionStorage();
+    const currentPlayer = gameFacade.getPlayerFromSessionStorage();
 
     const alreadyJoined = match.players.some(
       (matchPlayer) => matchPlayer.id === newlyJoinedPlayer.id,
@@ -169,7 +158,7 @@ export default function Pregame() {
       match.players.push(newlyJoinedPlayer);
 
       if (currentPlayer != null) {
-        HubConnectionService.Instance.sendEvent(MatchEventNames.PlayerJoined, {
+        gameFacade.sendEvent(MatchEventNames.PlayerJoined, {
           player: currentPlayer,
         });
       }
@@ -204,7 +193,7 @@ export default function Pregame() {
         MatchService.initMatchTeams();
         MatchService.initMatchAvailableAmmo();
 
-        HubConnectionService.Instance.sendEvent(MatchEventNames.MatchStarted);
+        gameFacade.sendEvent(MatchEventNames.MatchStarted);
 
         const firstPlayer = match.players[0];
         firstPlayer.attackTurns.push(new AttackTurn());
@@ -217,7 +206,7 @@ export default function Pregame() {
   function handlePlayerLeftLobbyEvent(data: any): void {
     const { playerId } = data as { playerId: number };
 
-    const player = MatchProvider.getPlayer(playerId);
+    const player = gameFacade.getMatchPlayer(playerId);
 
     if (!player) {
       console.error(`Player with ID ${playerId} not found.`);

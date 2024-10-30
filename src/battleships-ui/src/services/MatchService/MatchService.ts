@@ -22,11 +22,11 @@ export class MatchService {
 
     match.teamsMap.set(
       PlayerTeam.FirstTeam,
-      new MatchMap(match.mapSize, match.mapSize),
+      new MatchMap(undefined, match.mapSize, match.mapSize),
     );
     match.teamsMap.set(
       PlayerTeam.SecondTeam,
-      new MatchMap(match.mapSize, match.mapSize),
+      new MatchMap(undefined, match.mapSize, match.mapSize),
     );
   }
 
