@@ -17,9 +17,12 @@ import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
 import { AttackCommand } from "@/models/command";
 import GameFacade from "@/services/GameFacade";
+import AdminPanel, { AdminActions } from "../AdminPanel";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
+
+  const [adminMode, setAdminMode] = useState(false);
 
   const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
@@ -58,6 +61,18 @@ export default function MatchDisplay() {
     new TeamStats(),
   );
 
+  const adminActions = [
+    {
+      name: "Destroy all ships",
+      action: () => {
+        gameFacade.sendEvent(MatchEventNames.Admin, {
+          senderId: currentPlayerId,
+          command: AdminActions.DestroyAllShips,
+        });
+      },
+    },
+  ];
+
   useEffect(() => {
     const turnEndTime = Date.now() + 60 * 1000;
 
@@ -86,12 +101,22 @@ export default function MatchDisplay() {
   }, [activePlayer]);
 
   useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setAdminMode((prev) => !prev);
+      }
+    };
+
+    document.addEventListener("keydown", down);
+
     gameFacade.addEventObservers(
       {
         [MatchEventNames.AttackPerformed]: handleAttackTurnEvent,
         [MatchEventNames.UndoCommand]: handleUndoCommandEvent,
         [MatchEventNames.PlayerGaveUp]: handlePlayerGaveUpEvent,
         [MatchEventNames.PlayerLeft]: handlePlayerLeftEvent,
+        [MatchEventNames.Admin]: handleAdminEvent,
       },
       true,
     );
@@ -113,6 +138,7 @@ export default function MatchDisplay() {
 
     return () => {
       window.removeEventListener("beforeunload", unloadCallback);
+      document.removeEventListener("keydown", down);
     };
   }, []);
 
@@ -186,6 +212,8 @@ export default function MatchDisplay() {
         <GameLegend />
 
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
+
+        {adminMode && <AdminPanel actions={adminActions} />}
 
         <div className="mt-8 flex justify-center gap-2">
           <Button
@@ -330,6 +358,37 @@ export default function MatchDisplay() {
 
   function rerender(): void {
     setRerenderToggle(Math.random() * 100);
+  }
+
+  function handleAdminEvent(data: any): void {
+    const { senderId, command } = data as {
+      senderId: number;
+      command: AdminActions;
+    };
+
+    if (command === AdminActions.DestroyAllShips) {
+      const sender = gameFacade.getMatchPlayer(senderId);
+
+      if (!sender) {
+        console.error(`Player with ID ${senderId} not found.`);
+        return;
+      }
+
+      const attackedTeam = invertTeam(sender.team);
+
+      const attackedTeamMap = gameFacade.getTeamMap(attackedTeam)!;
+      const tiles = attackedTeamMap.tiles;
+
+      for (let row of tiles) {
+        for (let tile of row) {
+          if (tile.shipPart) {
+            tile.isShipPartDestroyed = true;
+          }
+        }
+      }
+
+      onGameOver(attackedTeam);
+    }
   }
 
   function handleAttackTurnEvent(data: any): void {
