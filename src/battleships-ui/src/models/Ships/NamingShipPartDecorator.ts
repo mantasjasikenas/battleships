@@ -7,9 +7,14 @@ export class NamingShipPartDecorator extends ShipPartDecorator {
     constructor(decoratedShipPart: ShipPart, name: string) {
       super(decoratedShipPart);
       this.shipPartName = name;
+      //this.logDecoration();
     }
   
     getPartName(): string {
       return this.shipPartName;
-    } 
+    }
+
+    logDecoration() {
+      console.log(`ShipPart "${this.decoratedShipPart.shipClass}" is being decorated with the name "${this.getPartName()}".`);
+  }
 }

@@ -59,12 +59,30 @@ function MapGridTile({
   disableHover,
 }: MapGridTileProps) {
 
-  let shipPartHpString =
-    tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
-      ? (tile.shipPart as ModularShipPart).hp.toString()
-      : "";
+  // let shipPartHpString =
+  //   tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
+  //     ? (tile.shipPart as ModularShipPart).hp.toString()
+  //     : "";
 
-  let decoratedShipPart = getText(tile);
+  let shipPartText = getShipPartText(tile);
+  let shipPartVisibility = getShipPartVisibility(tile);
+  let shipPartColor = getShipPartColor(tile);
+  let shipPartHpString = getShipPartHp(tile);
+  let displayText;
+
+if (shipPartHpString) {
+  displayText = shipPartHpString;
+} else {
+  let visibilityText = shipPartVisibility ? "V" : "";
+  let colorText = shipPartColor ? "C" : "";
+  let textText = shipPartText ? "T" : "";
+
+  displayText = visibilityText + colorText + textText;
+
+  // if(displayText != ""){
+  //    console.log(visibilityText + colorText + textText);
+  // }
+}
 
   return (
     <div
@@ -75,18 +93,74 @@ function MapGridTile({
       )}
       onClick={() => onTileSelect(tile)}
     >
-      <span className="map-tile-hp-span flex h-full w-full items-center justify-center">
-        {decoratedShipPart || shipPartHpString}
-      </span>
+       <span className="map-tile-hp-span flex h-full w-full items-center justify-center">
+            {displayText}
+        </span>
     </div>
   );
 
-  function getText(tile: MapTile): string {
+  function getShipPartText(tile: MapTile): string {
     let currentPart = tile.shipPart;
 
     while (currentPart) {
       if ("shipPartName" in currentPart && !isEnemyMap) {
         return (currentPart as any).shipPartName;
+      }
+      // move to the next decorated layer
+      currentPart = (currentPart as any).decoratedShipPart;
+    }
+
+    return "";
+  }
+
+  function getShipPartVisibility(tile: MapTile): string {
+    let currentPart = tile.shipPart;
+
+    while (currentPart) {
+      if ("visibilityLevel" in currentPart && !isEnemyMap) {
+        return (currentPart as any).visibilityLevel;
+      }
+      // move to the next decorated layer
+      currentPart = (currentPart as any).decoratedShipPart;
+    }
+
+    return "";
+  }
+
+  function getShipPartColor(tile: MapTile): string {
+    let currentPart = tile.shipPart;
+
+    while (currentPart) {
+      if ("shipPartColor" in currentPart && !isEnemyMap) {
+        return (currentPart as any).shipPartColor;
+      }
+      // move to the next decorated layer
+      currentPart = (currentPart as any).decoratedShipPart;
+    }
+
+    return "";
+  }
+
+  function getShipPartText(tile: MapTile): string {
+    let currentPart = tile.shipPart;
+
+    while (currentPart) {
+      if ("shipPartName" in currentPart && !isEnemyMap) {
+        return (currentPart as any).shipPartName;
+      }
+      // move to the next decorated layer
+      currentPart = (currentPart as any).decoratedShipPart;
+    }
+
+    return "";
+  }
+
+  function getShipPartHp(tile: MapTile): string {
+    let currentPart = tile.shipPart;
+
+    while (currentPart) {
+      if ("hp" in currentPart && !isEnemyMap) {
+        return (currentPart as any).hp;
       }
       // move to the next decorated layer
       currentPart = (currentPart as any).decoratedShipPart;
