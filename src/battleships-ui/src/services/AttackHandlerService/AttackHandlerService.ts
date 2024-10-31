@@ -32,6 +32,7 @@ export class AttackHandlerService {
 
       return () => {};
     }
+
     switch (ammoType) {
       case AmmoType.Classic:
         Context.setStrategy(new classicAttackStrategy());
@@ -42,9 +43,11 @@ export class AttackHandlerService {
       case AmmoType.ArmorPiercing:
         Context.setStrategy(new armorPiercingAttackStrategy());
         break;
-      case AmmoType.HighExplosive || AmmoType.DepthCharge:
-        const adapter = new AreaAttackAdapter(new AreaStrategy())
+      case AmmoType.HighExplosive || AmmoType.DepthCharge: {
+        const adapter = new AreaAttackAdapter(new AreaStrategy());
         Context.setStrategy(adapter);
+        break;
+      }
     }
 
     return (tile: MapTile, map: MatchMap) =>

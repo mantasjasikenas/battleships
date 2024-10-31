@@ -25,7 +25,3 @@ export default function AdminPanel({
     </div>
   );
 }
-
-export enum AdminActions {
-  DestroyAllShips,
-}

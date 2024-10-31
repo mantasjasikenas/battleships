@@ -17,7 +17,8 @@ import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
 import { AttackCommand } from "@/models/command";
 import GameFacade from "@/services/GameFacade";
-import AdminPanel, { AdminActions } from "../AdminPanel";
+import AdminPanel from "../AdminPanel";
+import { AdminActions } from "@/models/AdminActions";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
