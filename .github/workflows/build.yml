@@ -17,6 +17,9 @@ jobs:
           node-version: "20"
           cache: "npm"
 
+      - name: Change directory
+        run: cd src/battleships-ui
+
       - name: Install dependencies
         run: npm install
 
