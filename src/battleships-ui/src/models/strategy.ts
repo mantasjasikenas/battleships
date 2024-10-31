@@ -12,30 +12,31 @@ export class Context {
     this.strategy = strategy;
   }
   public static executeStrategy(ammo: Ammo, tile: MapTile, map: MatchMap) {
-    this.strategy?.Attack(ammo, tile, map);
+    this.strategy?.attack(ammo, tile, map);
   }
 }
 
 export interface Strategy {
-  Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void;
+  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void;
 }
+
 // DESIGN PATTERN: Adapter
-export class AreaAttackAdapter implements Strategy{
+export class AreaAttackAdapter implements Strategy {
   private strategy: AreaStrategy;
-  constructor(strategy: AreaStrategy){
+  constructor(strategy: AreaStrategy) {
     this.strategy = strategy;
   }
-  Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
     this.strategy.SetBaseAttack(ammo);
     this.strategy.AreaAttack(ammo, tile, map);
   }
 }
 
 export class classicAttackStrategy implements Strategy {
-  Attack(_ammo: Ammo, tile: MapTile, _map: MatchMap): void {
+  attack(_ammo: Ammo, tile: MapTile, _map: MatchMap): void {
     AttackInfo.baseAttack(tile);
 
-    if (!!tile.shipPart) {
+    if (tile.shipPart) {
       tile.shipPart.isDestroyed = true;
       tile.isShipPartDestroyed = true;
     }
@@ -43,7 +44,7 @@ export class classicAttackStrategy implements Strategy {
 }
 
 export class standardAttackStrategy implements Strategy {
-  Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
     AttackInfo.baseAttack(tile);
 
     if (!AttackInfo.isSurfaceAttackPossible(tile.shipPart?.shipClass)) {
@@ -55,7 +56,7 @@ export class standardAttackStrategy implements Strategy {
 }
 
 export class armorPiercingAttackStrategy implements Strategy {
-  Attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
     const attack = () => {
       AttackInfo.baseAttack(tile);
 
@@ -70,28 +71,27 @@ export class armorPiercingAttackStrategy implements Strategy {
   }
 }
 
-export class AreaStrategy{
+export class AreaStrategy {
   attack = (_ammo: Ammo, _tile: MapTile, _map: MatchMap) => {};
-  SetBaseAttack(ammo:Ammo): void {
-    if(ammo.type === AmmoType.HighExplosive){
-    this.attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
-      AttackInfo.baseAttack(tile);
-
-      if (!AttackInfo.isSurfaceAttackPossible(tile.shipPart?.shipClass)) {
-        return;
-      }
-
-      AttackInfo.damageAttack(ammo, tile, map);
-    };
-    }
-    else if(ammo.type === AmmoType.DepthCharge){
+  SetBaseAttack(ammo: Ammo): void {
+    if (ammo.type === AmmoType.HighExplosive) {
       this.attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
         AttackInfo.baseAttack(tile);
-  
+
+        if (!AttackInfo.isSurfaceAttackPossible(tile.shipPart?.shipClass)) {
+          return;
+        }
+
+        AttackInfo.damageAttack(ammo, tile, map);
+      };
+    } else if (ammo.type === AmmoType.DepthCharge) {
+      this.attack = (ammo: Ammo, tile: MapTile, map: MatchMap) => {
+        AttackInfo.baseAttack(tile);
+
         if (!AttackInfo.isUnderwaterAttackPossible(tile.shipPart?.shipClass)) {
           return;
         }
-  
+
         AttackInfo.damageAttack(ammo, tile, map);
       };
     }
@@ -120,7 +120,6 @@ export class AreaStrategy{
 
 // export class depthChargeAttackStrategy extends AreaStrategy {
 //   SetBaseAttack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-    
 
 //     AttackInfo.areaAttack(ammo, tile, map, attack);
 //   }
@@ -154,7 +153,7 @@ class AttackInfo {
   }
 
   static damageAttack(ammo: Ammo, tile: MapTile, _map: MatchMap): void {
-    if (!!tile.shipPart) {
+    if (tile.shipPart) {
       const shipPart = tile.shipPart as ModularShipPart;
 
       shipPart.hp -= ammo.damage;

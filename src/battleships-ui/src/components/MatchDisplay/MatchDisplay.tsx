@@ -380,8 +380,8 @@ export default function MatchDisplay() {
       const attackedTeamMap = gameFacade.getTeamMap(attackedTeam)!;
       const tiles = attackedTeamMap.tiles;
 
-      for (let row of tiles) {
-        for (let tile of row) {
+      for (const row of tiles) {
+        for (const tile of row) {
           if (tile.shipPart) {
             tile.isShipPartDestroyed = true;
           }
@@ -475,8 +475,8 @@ export default function MatchDisplay() {
     const attackedTeamMap = match.teamsMap.get(attackedTeam)!;
     const tiles = attackedTeamMap.tiles;
 
-    for (let row of tiles) {
-      for (let tile of row) {
+    for (const row of tiles) {
+      for (const tile of row) {
         if (tile.shipPart && !tile.isShipPartDestroyed) {
           return false;
         }

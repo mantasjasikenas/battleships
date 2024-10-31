@@ -28,7 +28,7 @@ export class Player {
   constructor(object: Partial<Player>) {
     this.id = object.id ?? Math.round(Math.random() * 1000);
     this.name = object.name ?? 'New player';
-    this.team = !!object.team ? PlayerTeam[object.team] : PlayerTeam.FirstTeam;
+    this.team = object.team ? PlayerTeam[object.team] : PlayerTeam.FirstTeam;
     this.airships = object.airships ?? [];
     this.attackTurns = [];
     this.ships = object.ships ?? [];

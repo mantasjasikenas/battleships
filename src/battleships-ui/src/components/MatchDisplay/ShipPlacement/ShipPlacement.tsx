@@ -141,11 +141,11 @@ export default function ShipPlacement() {
 
       let coversShip = false;
 
-      let x = Math.floor(Math.random() * (alliesTeamMap.tiles.length - 0)) + 0;
-      let y =
+      const x = Math.floor(Math.random() * (alliesTeamMap.tiles.length - 0)) + 0;
+      const y =
         Math.floor(Math.random() * (alliesTeamMap.tiles[0].length - 0)) + 0;
 
-      let a = Math.floor(Math.random() * (2 - 0)) + 0;
+      const a = Math.floor(Math.random() * (2 - 0)) + 0;
 
       if (a === 0) {
         if (

@@ -1,5 +1,5 @@
-import { MapTile } from '../MatchMap';
-import { TileColor } from './TileColors';
+import { MapTile } from "../MatchMap";
+import { TileColor } from "./TileColors";
 
 export abstract class TileDecorator implements MapTile {
   isAttacked: boolean;
@@ -15,4 +15,8 @@ export abstract class TileDecorator implements MapTile {
   }
 
   abstract getColor(): TileColor;
+
+  copy() {
+    return new MapTile(undefined, undefined, this);
+  }
 }

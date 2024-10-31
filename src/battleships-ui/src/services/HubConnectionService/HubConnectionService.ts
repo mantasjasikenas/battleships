@@ -49,7 +49,7 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
   private async handleSendEvent(event: MatchEventNames, data: any = {}) {
     try {
       await this._connection.send("PropagateEvent", event, data);
-    } catch (err) {
+    } catch {
       setTimeout(() => this.sendEvent(event, data), 1000);
     }
   }
@@ -57,7 +57,7 @@ export default class HubConnectionService extends MatchEventsCallbackHandler {
   private async start() {
     try {
       await this._connection.start();
-    } catch (err) {
+    } catch {
       setTimeout(this.start, 1000);
     }
   }
@@ -76,5 +76,5 @@ export enum MatchEventNames {
   PlayerLeft,
   PlayerLeftLobby,
   UndoCommand,
-  Admin
+  Admin,
 }

@@ -1,5 +1,4 @@
 import MatchMap, { MapTile } from "../../../models/MatchMap";
-import { ModularShipPart } from "../../../models/Ships/ShipPart";
 import { TileColor } from "../../../models/Map/TileColors";
 import { cn } from "@/lib/utils";
 
@@ -58,31 +57,30 @@ function MapGridTile({
   isSelected,
   disableHover,
 }: MapGridTileProps) {
-
   // let shipPartHpString =
   //   tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
   //     ? (tile.shipPart as ModularShipPart).hp.toString()
   //     : "";
 
-  let shipPartText = getShipPartText(tile);
-  let shipPartVisibility = getShipPartVisibility(tile);
-  let shipPartColor = getShipPartColor(tile);
-  let shipPartHpString = getShipPartHp(tile);
+  const shipPartText = getShipPartText(tile);
+  const shipPartVisibility = getShipPartVisibility(tile);
+  const shipPartColor = getShipPartColor(tile);
+  const shipPartHpString = getShipPartHp(tile);
   let displayText;
 
-if (shipPartHpString) {
-  displayText = shipPartHpString;
-} else {
-  let visibilityText = shipPartVisibility ? "V" : "";
-  let colorText = shipPartColor ? "C" : "";
-  let textText = shipPartText ? "T" : "";
+  if (shipPartHpString) {
+    displayText = shipPartHpString;
+  } else {
+    const visibilityText = shipPartVisibility ? "V" : "";
+    const colorText = shipPartColor ? "C" : "";
+    const textText = shipPartText ? "T" : "";
 
-  displayText = visibilityText + colorText + textText;
+    displayText = visibilityText + colorText + textText;
 
-  // if(displayText != ""){
-  //    console.log(visibilityText + colorText + textText);
-  // }
-}
+    // if(displayText != ""){
+    //    console.log(visibilityText + colorText + textText);
+    // }
+  }
 
   return (
     <div
@@ -93,9 +91,9 @@ if (shipPartHpString) {
       )}
       onClick={() => onTileSelect(tile)}
     >
-       <span className="map-tile-hp-span flex h-full w-full items-center justify-center">
-            {displayText}
-        </span>
+      <span className="map-tile-hp-span flex h-full w-full items-center justify-center">
+        {displayText}
+      </span>
     </div>
   );
 
@@ -133,20 +131,6 @@ if (shipPartHpString) {
     while (currentPart) {
       if ("shipPartColor" in currentPart && !isEnemyMap) {
         return (currentPart as any).shipPartColor;
-      }
-      // move to the next decorated layer
-      currentPart = (currentPart as any).decoratedShipPart;
-    }
-
-    return "";
-  }
-
-  function getShipPartText(tile: MapTile): string {
-    let currentPart = tile.shipPart;
-
-    while (currentPart) {
-      if ("shipPartName" in currentPart && !isEnemyMap) {
-        return (currentPart as any).shipPartName;
       }
       // move to the next decorated layer
       currentPart = (currentPart as any).decoratedShipPart;

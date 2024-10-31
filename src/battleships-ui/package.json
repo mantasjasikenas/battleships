@@ -32,7 +32,7 @@
   },
   "scripts": {
     "start": "vite --host",
-    "build": "npm run lint && tsc && vite build",
+    "build": "npm run lint && tsc -b && vite build",
     "preview": "vite preview --host --port 3000",
     "lint": "eslint ."
   },
