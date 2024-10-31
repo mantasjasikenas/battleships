@@ -4,6 +4,7 @@ An implementation of the classic battleships game with added features such as a 
 ## Comms
 Communication between players is mediated by the backend server (BE), while users play the game in the frontend (FE). Actions performed by the players get propagated to all users via SignalR, individual FE clients react to the received events and update the local game state accordingly
 
+
 FE sends information about the players actions to BE via a SignalR hub connection, where and event with an id and data is sent to the BE. BE than propagates the event to all FE clients connected to the BE SignalR hub.
 
 Event propagation steps:
