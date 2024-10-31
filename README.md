@@ -1,6 +1,7 @@
 # Battleships
 An implementation of the classic battleships game with added features such as a gamemode with various ammo types of different functionality.
 
+
 ## Comms
 Communication between players is mediated by the backend server (BE), while users play the game in the frontend (FE). Actions performed by the players get propagated to all users via SignalR, individual FE clients react to the received events and update the local game state accordingly
 
