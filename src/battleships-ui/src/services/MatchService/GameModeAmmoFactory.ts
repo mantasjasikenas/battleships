@@ -9,7 +9,7 @@ import {
   StandardAmmoBuilder,
 } from "./AmmoBuilder";
 
-// DESIGN PATTERN: Factory Method
+// DESIGN PATTERN: 2. Factory
 export interface GameModeAmmoFactory {
   createAmmo(): Ammo[];
 }

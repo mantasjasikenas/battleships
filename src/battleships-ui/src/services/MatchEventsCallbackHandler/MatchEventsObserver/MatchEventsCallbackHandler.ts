@@ -1,7 +1,7 @@
 import { MatchEventNames } from "../../HubConnectionService/HubConnectionService";
 import MatchEventsCallbackInvokeable from "./MatchEventsInvokeable";
 
-// DESIGN PATTERN: Observer
+// DESIGN PATTERN: 5. Observer
 export default class MatchEventsCallbackHandler {
   protected invokeables: {
     [event: number]: MatchEventsCallbackInvokeable[];

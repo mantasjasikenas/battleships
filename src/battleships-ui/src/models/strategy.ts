@@ -4,7 +4,7 @@ import MatchMap, { MapTile } from "./MatchMap";
 import { ShipClass } from "./Ships/ShipClass";
 import { ModularShipPart } from "./Ships/ShipPart";
 
-// DESIGN PATTERN: Strategy
+// DESIGN PATTERN: 4. Strategy
 export class Context {
   private static strategy: Strategy | undefined;
 
@@ -20,7 +20,7 @@ export interface Strategy {
   attack(ammo: Ammo, tile: MapTile, map: MatchMap): void;
 }
 
-// DESIGN PATTERN: Adapter
+// DESIGN PATTERN: 10. Adapter
 export class AreaAttackAdapter implements Strategy {
   private strategy: AreaStrategy;
   constructor(strategy: AreaStrategy) {

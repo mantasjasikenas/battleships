@@ -1,6 +1,6 @@
 import { ShipClass } from "./ShipClass";
 
-// DESIGN PATTERN: Prototype
+// DESIGN PATTERN: 7. Prototype
 export abstract class ShipPart {
   constructor(shipClass?: ShipClass, part?: ShipPart) {
     if (part) {

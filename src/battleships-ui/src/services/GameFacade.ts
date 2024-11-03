@@ -7,7 +7,7 @@ import { Match } from "@/models/Match";
 import MatchProvider from "./MatchProvider/MatchProvider";
 import { MatchService } from "./MatchService/MatchService";
 
-// DESIGN PATTERN: Facade
+// DESIGN PATTERN: 11. Facade
 export default class GameFacade {
   private constructor() {}
 

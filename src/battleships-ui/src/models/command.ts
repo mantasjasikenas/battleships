@@ -6,7 +6,7 @@ import MatchMap, { MapTile } from "./MatchMap";
 import { AmmoType } from "./Ammo";
 import { AttackHandlerService } from "@/services/AttackHandlerService/AttackHandlerService";
 
-// DESIGN PATTERN: Command
+// DESIGN PATTERN: 9. Command
 export interface Command {
   execute(): void;
   undo(): void;

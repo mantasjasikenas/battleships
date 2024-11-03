@@ -6,7 +6,7 @@ class AmmoDirector {
   }
 }
 
-// DESIGN PATTERN: Builder
+// DESIGN PATTERN: 6. Builder
 abstract class AmmoBuilder {
   protected ammoItem: Partial<Ammo> = {};
 
