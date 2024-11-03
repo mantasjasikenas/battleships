@@ -43,7 +43,8 @@ export class AttackHandlerService {
       case AmmoType.ArmorPiercing:
         Context.setStrategy(new armorPiercingAttackStrategy());
         break;
-      case AmmoType.HighExplosive || AmmoType.DepthCharge: {
+      case AmmoType.HighExplosive:
+      case AmmoType.DepthCharge: {
         const adapter = new AreaAttackAdapter(new AreaStrategy());
         Context.setStrategy(adapter);
         break;
