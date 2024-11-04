@@ -2,3 +2,4 @@ battleships.code-workspace
 .vscode/
 .vs/
 node_modules/
+src/battleships-ui/.eslintcache
