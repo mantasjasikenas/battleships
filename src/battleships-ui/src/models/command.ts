@@ -43,14 +43,14 @@ export class PlaceShipCommand implements Command {
     )!;
 
     if (this.alignment === 0) {
-      this.ships[placer.placedShips].parts.forEach(
+      this.ships[placer.placedShips].partsImplementation.parts.forEach(
         (part: ShipPart | undefined, partIndex: number) => {
           currentMap.tiles[this.tile.x][this.tile.y + partIndex].shipPart =
             part;
         },
       );
     } else {
-      this.ships[placer.placedShips].parts.forEach(
+      this.ships[placer.placedShips].partsImplementation.parts.forEach(
         (part: ShipPart | undefined, partIndex: number) => {
           currentMap.tiles[this.tile.x + partIndex][this.tile.y].shipPart =
             part;
@@ -73,7 +73,7 @@ export class PlaceShipCommand implements Command {
     )!;
     placer.placedShips--;
 
-    for (let i = 0; i < this.ships[placer.placedShips].parts.length; i++) {
+    for (let i = 0; i < this.ships[placer.placedShips].partsImplementation.parts.length; i++) {
       if (this.alignment === 0) {
         currentMap.tiles[this.tile.x][this.tile.y + i].shipPart = undefined;
       } else {
