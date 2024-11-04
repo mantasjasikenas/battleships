@@ -8,6 +8,7 @@ import {
   // ObservingShipPart,
   ShipPart,
 } from './ShipPart';
+import { ShipPartsImplementation } from './ShipPartsImplementation';
 import { VisibilityShipPartDecorator } from './VisibilityShipPartDecorator';
 
 export enum ShipPartType {
@@ -17,9 +18,12 @@ export enum ShipPartType {
 }
 
 export default abstract class Ship extends Vehicle {
-  readonly forwardTravelDistance = 1;
-  readonly shipClass!: ShipClass;
-  abstract readonly parts: ShipPart[];
+  public partsImplementation: ShipPartsImplementation;
+
+  constructor(partsImplementation: ShipPartsImplementation) {
+    super();
+    this.partsImplementation = partsImplementation;
+  }
 }
 
 export abstract class Carrier extends Ship {
@@ -52,14 +56,6 @@ export function createParts(
 ): ShipPart[] {
   const result: ShipPart[] = [];
   
-  // Create the initial decorated part
-  // const basePart = redecorateShipPart(
-  //   new ClassicShipPart(shipClass),
-  //   shipPartName,
-  //   shipPartColor,
-  //   shipPartVisibility
-  // );
-
   const basePart = createPart(type, shipClass);
 
   // push the first part and create shallow copies with re-decoration for each part

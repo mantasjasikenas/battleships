@@ -143,8 +143,8 @@ function MapGridTile({
     let currentPart = tile.shipPart;
 
     while (currentPart) {
-      if ("hp" in currentPart && !isEnemyMap) {
-        return (currentPart as any).hp;
+      if ("hp" in currentPart && !isEnemyMap && tile.shipPart !== undefined ) {
+        return (currentPart as any).hp.toString();
       }
       // move to the next decorated layer
       currentPart = (currentPart as any).decoratedShipPart;

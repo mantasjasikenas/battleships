@@ -149,13 +149,13 @@ export default function ShipPlacement() {
 
       if (a === 0) {
         if (
-          currentPlayer.ships[validNr].parts.length + y >
+          currentPlayer.ships[validNr].partsImplementation.parts.length + y >
           alliesTeamMap.tiles[0].length
         ) {
           continue;
         }
 
-        for (let i = 0; i < currentPlayer.ships[validNr].parts.length; i++) {
+        for (let i = 0; i < currentPlayer.ships[validNr].partsImplementation.parts.length; i++) {
           if (alliesTeamMap.tiles[x][y + i].shipPart !== undefined) {
             coversShip = true;
             break;
@@ -166,18 +166,18 @@ export default function ShipPlacement() {
           continue;
         }
 
-        currentPlayer.ships[validNr].parts.forEach((part, partIndex) => {
+        currentPlayer.ships[validNr].partsImplementation.parts.forEach((part, partIndex) => {
           alliesTeamMap.tiles[x][y + partIndex].shipPart = part;
         });
       } else {
         if (
-          currentPlayer.ships[validNr].parts.length + x >
+          currentPlayer.ships[validNr].partsImplementation.parts.length + x >
           alliesTeamMap.tiles.length
         ) {
           continue;
         }
 
-        for (let i = 0; i < currentPlayer.ships[validNr].parts.length; i++) {
+        for (let i = 0; i < currentPlayer.ships[validNr].partsImplementation.parts.length; i++) {
           if (alliesTeamMap.tiles[x + i][y].shipPart !== undefined) {
             coversShip = true;
             break;
@@ -188,7 +188,7 @@ export default function ShipPlacement() {
           continue;
         }
 
-        currentPlayer.ships[validNr].parts.forEach((part, partIndex) => {
+        currentPlayer.ships[validNr].partsImplementation.parts.forEach((part, partIndex) => {
           alliesTeamMap.tiles[x + partIndex][y].shipPart = part;
         });
       }
@@ -218,7 +218,7 @@ export default function ShipPlacement() {
     } else {
       if (selectedAlignment === 0) {
         if (
-          currentPlayer.ships[currentPlayer.placedShips].parts.length +
+          currentPlayer.ships[currentPlayer.placedShips].partsImplementation.parts.length +
             selectedTile.y >
           alliesTeamMap.tiles[0].length
         ) {
@@ -227,7 +227,7 @@ export default function ShipPlacement() {
         }
         for (
           let i = 0;
-          i < currentPlayer.ships[currentPlayer.placedShips].parts.length;
+          i < currentPlayer.ships[currentPlayer.placedShips].partsImplementation.parts.length;
           i++
         ) {
           if (
@@ -240,7 +240,7 @@ export default function ShipPlacement() {
         }
       } else {
         if (
-          currentPlayer.ships[currentPlayer.placedShips].parts.length +
+          currentPlayer.ships[currentPlayer.placedShips].partsImplementation.parts.length +
             selectedTile.x >
           alliesTeamMap.tiles.length
         ) {
@@ -249,7 +249,7 @@ export default function ShipPlacement() {
         }
         for (
           let i = 0;
-          i < currentPlayer.ships[currentPlayer.placedShips].parts.length;
+          i < currentPlayer.ships[currentPlayer.placedShips].partsImplementation.parts.length;
           i++
         ) {
           if (
