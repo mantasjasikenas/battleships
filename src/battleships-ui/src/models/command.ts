@@ -108,7 +108,7 @@ export class AttackCommand implements Command {
 
     const attackFunc = AttackHandlerService.getAttackByAmmo(
       this.ammoType,
-      MatchProvider.Instance.match.availableAmmoTypes,
+      MatchProvider.Instance.match.availableAmmoTypes.values,
     );
     attackFunc(mapTile, attackedTeamMap);
   }

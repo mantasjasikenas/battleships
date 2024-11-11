@@ -1,4 +1,3 @@
-import { Ammo } from "@/models/Ammo";
 import {
   AmmoBuilder,
   AmmoDirector,
@@ -8,25 +7,29 @@ import {
   HighExplosiveAmmoBuilder,
   StandardAmmoBuilder,
 } from "./AmmoBuilder";
+import { AmmoCollection } from "@/models/Ships/iterators/AmmoCollection";
 
 // DESIGN PATTERN: 2. Factory
 export interface GameModeAmmoFactory {
-  createAmmo(): Ammo[];
+  createAmmo(): AmmoCollection;
 }
 
 export class ClassicGameModeFactory implements GameModeAmmoFactory {
-  createAmmo(): Ammo[] {
+  createAmmo(): AmmoCollection {
     const classicAmmoBuilder: AmmoBuilder = new ClassicAmmoBuilder();
     const director = new AmmoDirector();
 
     director.construct(classicAmmoBuilder);
 
-    return [classicAmmoBuilder.getResult()];
+    const ammoCollection = new AmmoCollection();
+    ammoCollection.addAmmo(classicAmmoBuilder.getResult());
+
+    return ammoCollection;
   }
 }
 
 export class AmmoGameModeFactory implements GameModeAmmoFactory {
-  createAmmo(): Ammo[] {
+  createAmmo(): AmmoCollection {
     const director = new AmmoDirector();
 
     const standardAmmoBuilder: AmmoBuilder = new StandardAmmoBuilder();
@@ -41,22 +44,28 @@ export class AmmoGameModeFactory implements GameModeAmmoFactory {
     director.construct(hightExplosiveAmmoBuilder);
     director.construct(depthChargeAmmoBuilder);
 
-    return [
-      standardAmmoBuilder.getResult(),
-      armorPiercingAmmoBuilder.getResult(),
-      hightExplosiveAmmoBuilder.getResult(),
-      depthChargeAmmoBuilder.getResult(),
-    ];
+    const ammoCollection = new AmmoCollection();
+
+    ammoCollection.addAmmo(standardAmmoBuilder.getResult());
+    ammoCollection.addAmmo(armorPiercingAmmoBuilder.getResult());
+    ammoCollection.addAmmo(hightExplosiveAmmoBuilder.getResult());
+    ammoCollection.addAmmo(depthChargeAmmoBuilder.getResult());
+
+    return ammoCollection;
   }
 }
 
 export class FogOfWarGameModeFactory implements GameModeAmmoFactory {
-  createAmmo(): Ammo[] {
+  createAmmo(): AmmoCollection {
     const classicAmmoBuilder: AmmoBuilder = new ClassicAmmoBuilder();
     const director = new AmmoDirector();
 
     director.construct(classicAmmoBuilder);
 
-    return [classicAmmoBuilder.getResult()];
+    const ammoCollection = new AmmoCollection();
+
+    ammoCollection.addAmmo(classicAmmoBuilder.getResult());
+
+    return ammoCollection;
   }
 }

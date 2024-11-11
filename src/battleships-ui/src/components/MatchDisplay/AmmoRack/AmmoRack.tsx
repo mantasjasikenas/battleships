@@ -12,13 +12,13 @@ export default function AmmoRack({
   selectedAmmo,
   onAmmoSelect,
 }: AmmoRackProps) {
-  const match = MatchProvider.Instance.match;
+  const match = MatchProvider.Instance.match;    
 
   return (
     <div className="mt-8 flex flex-col items-center gap-2">
       <Label className="font-bold">Ammo types</Label>
       <div className="flex w-full flex-wrap justify-center gap-2">
-        {match.availableAmmoTypes.map((ammo, index) => (
+        {match.availableAmmoTypes.values.map((ammo, index) => (
           <Button
             variant={selectedAmmo === ammo ? "default" : "outline"}
             key={index}

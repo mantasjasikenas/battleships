@@ -50,7 +50,7 @@ export default function MatchDisplay() {
   );
 
   const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(
-    match.availableAmmoTypes[0],
+    match.availableAmmoTypes.values[0],
   );
 
   const [turnRemainingTime, setTurnRemainingTime] = useState(60);
