@@ -1,6 +1,7 @@
 import MatchMap, { MapTile } from "../../../models/MatchMap";
 import { TileColor } from "../../../models/Map/TileColors";
 import { cn } from "@/lib/utils";
+import { ColorCheck, HpCheck, TextCheck, VisibilityCheck } from "@/services/MatchService/shipCheck";
 
 interface MapGridProps {
   isEnemyMap: boolean;
@@ -60,12 +61,22 @@ function MapGridTile({
   // let shipPartHpString =
   //   tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
   //     ? (tile.shipPart as ModularShipPart).hp.toString()
-  //     : "";
+  //     : undefined;
 
-  const shipPartText = getShipPartText(tile);
-  const shipPartVisibility = getShipPartVisibility(tile);
-  const shipPartColor = getShipPartColor(tile);
-  const shipPartHpString = getShipPartHp(tile);
+
+  let shipCheck = new TextCheck(tile, isEnemyMap);
+  const shipPartText = shipCheck.performCheck();
+  shipCheck = new VisibilityCheck(tile, isEnemyMap);
+  const shipPartVisibility = shipCheck.performCheck();
+  shipCheck = new ColorCheck(tile, isEnemyMap);
+  const shipPartColor = shipCheck.performCheck();
+  shipCheck = new HpCheck(tile, isEnemyMap);
+  const shipPartHpString = shipCheck.performCheck();
+
+  // const shipPartText = getShipPartText(tile);
+  // const shipPartVisibility = getShipPartVisibility(tile);
+  // const shipPartColor = getShipPartColor(tile);
+  // const shipPartHpString = getShipPartHp(tile);
   let displayText;
 
   if (shipPartHpString) {
@@ -97,61 +108,61 @@ function MapGridTile({
     </div>
   );
 
-  function getShipPartText(tile: MapTile): string {
-    let currentPart = tile.shipPart;
+  // function getShipPartText(tile: MapTile): string {
+  //   let currentPart = tile.shipPart;
 
-    while (currentPart) {
-      if ("shipPartName" in currentPart && !isEnemyMap) {
-        return (currentPart as any).shipPartName;
-      }
-      // move to the next decorated layer
-      currentPart = (currentPart as any).decoratedShipPart;
-    }
+  //   while (currentPart) {
+  //     if ("shipPartName" in currentPart && !isEnemyMap) {
+  //       return (currentPart as any).shipPartName;
+  //     }
+  //     // move to the next decorated layer
+  //     currentPart = (currentPart as any).decoratedShipPart;
+  //   }
 
-    return "";
-  }
+  //   return "";
+  // }
 
-  function getShipPartVisibility(tile: MapTile): string {
-    let currentPart = tile.shipPart;
+  // function getShipPartVisibility(tile: MapTile): string {
+  //   let currentPart = tile.shipPart;
 
-    while (currentPart) {
-      if ("visibilityLevel" in currentPart && !isEnemyMap) {
-        return (currentPart as any).visibilityLevel;
-      }
-      // move to the next decorated layer
-      currentPart = (currentPart as any).decoratedShipPart;
-    }
+  //   while (currentPart) {
+  //     if ("visibilityLevel" in currentPart && !isEnemyMap) {
+  //       return (currentPart as any).visibilityLevel;
+  //     }
+  //     // move to the next decorated layer
+  //     currentPart = (currentPart as any).decoratedShipPart;
+  //   }
 
-    return "";
-  }
+  //   return "";
+  // }
 
-  function getShipPartColor(tile: MapTile): string {
-    let currentPart = tile.shipPart;
+  // function getShipPartColor(tile: MapTile): string {
+  //   let currentPart = tile.shipPart;
 
-    while (currentPart) {
-      if ("shipPartColor" in currentPart && !isEnemyMap) {
-        return (currentPart as any).shipPartColor;
-      }
-      // move to the next decorated layer
-      currentPart = (currentPart as any).decoratedShipPart;
-    }
+  //   while (currentPart) {
+  //     if ("shipPartColor" in currentPart && !isEnemyMap) {
+  //       return (currentPart as any).shipPartColor;
+  //     }
+  //     // move to the next decorated layer
+  //     currentPart = (currentPart as any).decoratedShipPart;
+  //   }
 
-    return "";
-  }
+  //   return "";
+  // }
 
-  function getShipPartHp(tile: MapTile): string {
-    let currentPart = tile.shipPart;
+  // function getShipPartHp(tile: MapTile): string {
+  //   let currentPart = tile.shipPart;
 
-    while (currentPart) {
-      if ("hp" in currentPart && !isEnemyMap && tile.shipPart !== undefined ) {
-        return (currentPart as any).hp.toString();
-      }
-      // move to the next decorated layer
-      currentPart = (currentPart as any).decoratedShipPart;
-    }
+  //   while (currentPart) {
+  //     if ("hp" in currentPart && !isEnemyMap && tile.shipPart !== undefined ) {
+  //       return (currentPart as any).hp.toString();
+  //     }
+  //     // move to the next decorated layer
+  //     currentPart = (currentPart as any).decoratedShipPart;
+  //   }
 
-    return "";
-  }
+  //   return "";
+  // }
 
   function getColor(tile: MapTile): string {
     if (isSelected) {
