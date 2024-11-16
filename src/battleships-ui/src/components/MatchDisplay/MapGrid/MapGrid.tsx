@@ -77,9 +77,12 @@ function MapGridTile({
 
     displayText = visibilityText + colorText + textText;
 
-    // if(displayText != ""){
-    //    console.log(visibilityText + colorText + textText);
-    // }
+    if(displayText != ""){
+       console.log(visibilityText + colorText + textText);
+    }
+    else{
+      console.log("no text");
+    }
   }
 
   return (

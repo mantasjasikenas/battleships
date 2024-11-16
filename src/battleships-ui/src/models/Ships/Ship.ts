@@ -69,7 +69,7 @@ export function createParts(
 }
 
 function redecorateShipPart(part: ShipPart, name: string, color: string, visibility: number): ShipPart {
-  return part;
+  // return part;
   const namedPart = new NamingShipPartDecorator(part, name);
   const coloredPart = new ColorShipPartDecorator(namedPart, color);
   return new VisibilityShipPartDecorator(coloredPart, visibility);
