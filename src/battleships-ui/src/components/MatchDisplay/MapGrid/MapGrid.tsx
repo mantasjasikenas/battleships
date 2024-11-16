@@ -2,7 +2,6 @@ import MatchMap, { MapTile } from "../../../models/MatchMap";
 import { TileColor } from "../../../models/Map/TileColors";
 import { cn } from "@/lib/utils";
 import { ColorCheck, HpCheck, TextCheck, VisibilityCheck } from "@/services/MatchService/shipCheck";
-import { ModularShipPart } from "@/models/Ships/ShipPart";
 
 interface MapGridProps {
   isEnemyMap: boolean;
