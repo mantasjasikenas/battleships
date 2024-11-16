@@ -1,6 +1,8 @@
 import { MapTile } from "@/models/MatchMap";
 import { ShipPart } from "@/models/Ships/ShipPart";
 
+
+// DESIGN PATTERN: 13. Template method
 abstract class ShipCheck{
     tile: MapTile;
     isEnemyMap: boolean;
