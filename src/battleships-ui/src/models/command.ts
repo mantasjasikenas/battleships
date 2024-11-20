@@ -83,40 +83,67 @@ export class PlaceShipCommand implements Command {
     currentMap.shipsPlaced = false;
   }
 }
-
 export class AttackCommand implements Command {
-  attackerTeam: PlayerTeam;
   tile: MapTile;
-  ammoType: AmmoType;
   backUpMap: MatchMap | undefined;
+  attackInfo: AttackInfo;
 
-  constructor(attackerTeam: PlayerTeam, tile: MapTile, ammoType: AmmoType) {
-    this.attackerTeam = attackerTeam;
+  constructor(tile: MapTile, attackInfo: AttackInfo) {
+    this.attackInfo = attackInfo;
     this.tile = tile;
-    this.ammoType = ammoType;
   }
 
   execute() {
+    this.backUpMap = this.attackInfo.execute(this.tile, this.backUpMap);
+  }
+  undo() {
+    if (this.backUpMap) {
+      this.attackInfo.undo(this.backUpMap);
+    }
+  }
+}
+
+
+// DESIGN PATTERN: 16. Flywieght
+export class AttackFactory{
+  static attackInfo?: AttackInfo[];
+  public static getInfo(attackerTeam: PlayerTeam, ammoType: AmmoType){
+      let info = this.attackInfo?.find(x => x.ammoType === ammoType && x.attackerTeam === attackerTeam)
+      if(info === undefined){
+        info = new AttackInfo(attackerTeam, ammoType);
+        this.attackInfo?.push(info);
+      }
+      return info;
+  }
+}
+
+export class AttackInfo{
+  attackerTeam: PlayerTeam;
+  ammoType: AmmoType;
+  constructor(attackerTeam: PlayerTeam, ammoType: AmmoType){
+    this.attackerTeam = attackerTeam;
+    this.ammoType = ammoType;
+  }
+  execute(tile: MapTile, backUpMap?: MatchMap) {
     const attackedTeam = invertTeam(this.attackerTeam);
 
     const attackedTeamMap =
       MatchProvider.Instance.match.teamsMap.get(attackedTeam)!;
 
-    this.backUpMap = attackedTeamMap.copy();
+    backUpMap = attackedTeamMap.copy();
 
-    const mapTile = attackedTeamMap.tiles[this.tile.x][this.tile.y];
+    const mapTile = attackedTeamMap.tiles[tile.x][tile.y];
 
     const attackFunc = AttackHandlerService.getAttackByAmmo(
       this.ammoType,
       MatchProvider.Instance.match.availableAmmoTypes.values,
     );
     attackFunc(mapTile, attackedTeamMap);
+    return backUpMap;
   }
-  undo() {
-    if (this.backUpMap) {
-      const attackedTeam = invertTeam(this.attackerTeam);
-      MatchProvider.Instance.match.teamsMap.set(attackedTeam, this.backUpMap);
-    }
+  undo(backUpMap: MatchMap) {
+    const attackedTeam = invertTeam(this.attackerTeam);
+    MatchProvider.Instance.match.teamsMap.set(attackedTeam, backUpMap);
   }
 }
 
