@@ -103,42 +103,8 @@ export class AttackCommand implements Command {
   }
 }
 
-// export class AttackCommand implements Command {
-//   attackerTeam: PlayerTeam;
-//   tile: MapTile;
-//   ammoType: AmmoType;
-//   backUpMap: MatchMap | undefined;
 
-//   constructor(attackerTeam: PlayerTeam, tile: MapTile, ammoType: AmmoType) {
-//     this.attackerTeam = attackerTeam;
-//     this.tile = tile;
-//     this.ammoType = ammoType;
-//   }
-
-//   execute() {
-//     const attackedTeam = invertTeam(this.attackerTeam);
-
-//     const attackedTeamMap =
-//       MatchProvider.Instance.match.teamsMap.get(attackedTeam)!;
-
-//     this.backUpMap = attackedTeamMap.copy();
-
-//     const mapTile = attackedTeamMap.tiles[this.tile.x][this.tile.y];
-
-//     const attackFunc = AttackHandlerService.getAttackByAmmo(
-//       this.ammoType,
-//       MatchProvider.Instance.match.availableAmmoTypes.values,
-//     );
-//     attackFunc(mapTile, attackedTeamMap);
-//   }
-//   undo() {
-//     if (this.backUpMap) {
-//       const attackedTeam = invertTeam(this.attackerTeam);
-//       MatchProvider.Instance.match.teamsMap.set(attackedTeam, this.backUpMap);
-//     }
-//   }
-// }
-
+// DESIGN PATTERN: 16. Flywieght
 export class AttackFactory{
   static attackInfo?: AttackInfo[];
   public static getInfo(attackerTeam: PlayerTeam, ammoType: AmmoType){
