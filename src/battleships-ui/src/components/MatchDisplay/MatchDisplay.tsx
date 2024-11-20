@@ -21,7 +21,6 @@ import AdminPanel from "../AdminPanel";
 import { AdminActions } from "@/models/AdminActions";
 
 export default function MatchDisplay() {
-  const AttckFactory = new AttackFactory();
   const navigate = useNavigate();
 
   const [adminMode, setAdminMode] = useState(false);
