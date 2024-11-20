@@ -15,12 +15,13 @@ import GameLegend from "./GameLegend";
 import { useNavigate } from "react-router-dom";
 import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
-import { AttackCommand } from "@/models/command";
+import { AttackCommand, AttackFactory } from "@/models/command";
 import GameFacade from "@/services/GameFacade";
 import AdminPanel from "../AdminPanel";
 import { AdminActions } from "@/models/AdminActions";
 
 export default function MatchDisplay() {
+  const AttckFactory = new AttackFactory();
   const navigate = useNavigate();
 
   const [adminMode, setAdminMode] = useState(false);
@@ -400,7 +401,9 @@ export default function MatchDisplay() {
 
     const attackedTeam = invertTeam(attackerTeam);
 
-    attacker.invoker.execute(new AttackCommand(attackerTeam, tile, ammoType));
+    const info = AttackFactory.getInfo(attackerTeam, ammoType);
+
+    attacker.invoker.execute(new AttackCommand(tile, info));
 
     if (attackerTeam === currentPlayerTeam) {
       setAlliesTeamStats((_prev) => calculateTeamStats(enemiesTeamMap));
