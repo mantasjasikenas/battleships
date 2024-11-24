@@ -84,12 +84,12 @@ export class Player {
   }
   
   reduceCooldown(): void {
-    for (let [ammoType, cooldownTime] of this.ammoCooldowns) {
+    for (const [ammoType, cooldownTime] of this.ammoCooldowns) {
       if (cooldownTime > 0) {
         this.ammoCooldowns.set(ammoType, cooldownTime - 1);
       }
     }
-  }
+  }  
 
   isCooldownDone(ammoType: AmmoType): boolean {
     return this.ammoCooldowns.get(ammoType) === 0;
