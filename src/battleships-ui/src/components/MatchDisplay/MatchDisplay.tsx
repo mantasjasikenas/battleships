@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
-import { invertTeam, PlayerTeam } from "../../models/Player";
+import { invertTeam, Player, PlayerTeam } from "../../models/Player";
 import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
 import { MatchEventNames } from "../../services/HubConnectionService/HubConnectionService";
 import AmmoRack from "./AmmoRack/AmmoRack";
@@ -19,6 +19,7 @@ import { AttackCommand, AttackFactory } from "@/models/command";
 import GameFacade from "@/services/GameFacade";
 import AdminPanel from "../AdminPanel";
 import { AdminActions } from "@/models/AdminActions";
+import { AmmoType } from '../../models/Ammo'; 
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -74,6 +75,36 @@ export default function MatchDisplay() {
     },
   ];
 
+  const updateCooldowns = () => {
+    gameFacade.getMatch().players.forEach((player) => {
+      player.reduceCooldown();
+    });
+  };
+
+  useEffect(() => {
+    const cooldownTimerId = setInterval(() => {
+      updateCooldowns();
+
+      checkAmmoCooldown(AmmoType.Classic);
+      checkAmmoCooldown(AmmoType.Standard);
+      checkAmmoCooldown(AmmoType.ArmorPiercing);
+      checkAmmoCooldown(AmmoType.HighExplosive);
+      checkAmmoCooldown(AmmoType.DepthCharge);
+
+    }, 1000);
+
+    return () => clearInterval(cooldownTimerId);
+  }, []);
+
+  const checkAmmoCooldown = (ammoType: AmmoType) => {
+    gameFacade.getMatch().players.forEach((player) => {
+      if (ammoType && player.isCooldownDone(ammoType)) {
+        const ammoTypeName = AmmoType[ammoType];
+        toast.success(`${ammoTypeName} ammo is ready to fire!`, { id: `${ammoType}-attack-toast`, duration: 3000 });
+      }
+    });
+  };
+  
   useEffect(() => {
     const turnEndTime = Date.now() + 60 * 1000;
 
@@ -97,7 +128,7 @@ export default function MatchDisplay() {
 
   useEffect(() => {
     if (activePlayer.id === currentPlayer.id) {
-      toast.success("It's your turn!", { id: "turn-toast" });
+      toast.success("It's your turn!", { id: "turn-toast", duration: 5000 });
     }
   }, [activePlayer]);
 
@@ -280,14 +311,7 @@ export default function MatchDisplay() {
 
       return;
     }
-
-    gameFacade.sendEvent(MatchEventNames.AttackPerformed, {
-      attackerId: currentPlayer.id,
-      attackerTeam: currentPlayer.team,
-      tile: turn.tile,
-      ammoType: turn.ammo.type,
-    });
-
+    turn.ammo.onAttack(gameFacade, currentPlayer, turn, turn.tile);
     setSelectedTile(null);
   }
 

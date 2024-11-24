@@ -2,7 +2,7 @@ import { Ammo, AmmoType } from "@/models/Ammo";
 
 class AmmoDirector {
   construct(builder: AmmoBuilder) {
-    return builder.addDamage().addImpactRadius().addCooldown().addType();
+    return builder.addDamage().addImpactRadius().addCooldown().addType().addCount();
   }
 }
 
@@ -14,6 +14,7 @@ abstract class AmmoBuilder {
   abstract addImpactRadius(): this;
   abstract addCooldown(): this;
   abstract addType(): this;
+  abstract addCount(): this;
 
   getResult(): Ammo {
     return Ammo.map(this.ammoItem);
@@ -32,13 +33,18 @@ class ClassicAmmoBuilder extends AmmoBuilder {
   }
 
   addCooldown(): this {
-    this.ammoItem.cooldown = 0;
+    this.ammoItem.cooldown = 20;
     return this;
   }
 
   addType(): this {
     this.ammoItem.type = AmmoType.Classic;
     this.ammoItem.name = "Classic";
+    return this;
+  }
+
+  addCount(): this {
+    this.ammoItem.count = 3;
     return this;
   }
 }
@@ -53,12 +59,16 @@ class StandardAmmoBuilder extends AmmoBuilder {
     return this;
   }
   addCooldown(): this {
-    this.ammoItem.cooldown = 0;
+    this.ammoItem.cooldown = 20;
     return this;
   }
   addType(): this {
     this.ammoItem.type = AmmoType.Standard;
     this.ammoItem.name = "Standard";
+    return this;
+  }
+  addCount(): this {
+    this.ammoItem.count = 3;
     return this;
   }
 }
@@ -73,12 +83,16 @@ class ArmorPiercingAmmoBuilder extends AmmoBuilder {
     return this;
   }
   addCooldown(): this {
-    this.ammoItem.cooldown = 1;
+    this.ammoItem.cooldown = 30;
     return this;
   }
   addType(): this {
     this.ammoItem.type = AmmoType.ArmorPiercing;
     this.ammoItem.name = "Armor Piercing";
+    return this;
+  }
+  addCount(): this {
+    this.ammoItem.count = 3;
     return this;
   }
 }
@@ -93,12 +107,16 @@ class HighExplosiveAmmoBuilder extends AmmoBuilder {
     return this;
   }
   addCooldown(): this {
-    this.ammoItem.cooldown = 0;
+    this.ammoItem.cooldown = 30;
     return this;
   }
   addType(): this {
     this.ammoItem.type = AmmoType.HighExplosive;
     this.ammoItem.name = "High Explosive";
+    return this;
+  }
+  addCount(): this {
+    this.ammoItem.count = 3;
     return this;
   }
 }
@@ -113,12 +131,16 @@ class DepthChargeAmmoBuilder extends AmmoBuilder {
     return this;
   }
   addCooldown(): this {
-    this.ammoItem.cooldown = 0;
+    this.ammoItem.cooldown = 30;
     return this;
   }
   addType(): this {
     this.ammoItem.type = AmmoType.DepthCharge;
     this.ammoItem.name = "Depth Charge";
+    return this;
+  }
+  addCount(): this {
+    this.ammoItem.count = 3;
     return this;
   }
 }
