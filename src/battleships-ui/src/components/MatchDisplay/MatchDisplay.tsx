@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
-import { invertTeam, Player, PlayerTeam } from "../../models/Player";
+import { invertTeam, PlayerTeam } from "../../models/Player";
 import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
 import { MatchEventNames } from "../../services/HubConnectionService/HubConnectionService";
 import AmmoRack from "./AmmoRack/AmmoRack";

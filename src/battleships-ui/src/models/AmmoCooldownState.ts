@@ -2,13 +2,12 @@ import { AmmoState } from './AmmoState';
 import { Ammo } from './Ammo';
 import GameFacade from "@/services/GameFacade";
 import { Player } from './Player';
-import { MapTile } from "./MatchMap";
 import { toast } from "sonner";
 import { AttackTurn } from "./Turns/AttackTurn";
 import { AmmoReadyToFireState } from './AmmoReadyToFireState';
 
 export class AmmoCooldownState implements AmmoState {
-    onAttack(ammo: Ammo, gameFacade: GameFacade, currentPlayer: Player, turn: AttackTurn, selectedTile: MapTile | null): void {
+    onAttack(ammo: Ammo, gameFacade: GameFacade, currentPlayer: Player, turn: AttackTurn): void {
 
         if (currentPlayer.isCooldownDone(ammo.type)) {    
           ammo.state = new AmmoReadyToFireState();
