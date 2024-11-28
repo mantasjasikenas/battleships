@@ -81,7 +81,7 @@ export default class GameFacade {
     return MatchProvider.getTeamMap(team);
   }
 
-  remotePlayerFromMatch(playerId: number) {
+  removePlayerFromMatch(playerId: number) {
     MatchService.removePlayerFromMatch(playerId);
   }
 
@@ -89,5 +89,20 @@ export default class GameFacade {
     MatchProvider.reset();
     PlayerService.removeFromSessionStorage();
     HubConnectionService.Instance.clearAll();
+  }
+
+  destroyAllShips(sender: Player, attackedTeam: PlayerTeam): boolean {
+    const attackedTeamMap = this.getTeamMap(attackedTeam)!;
+    const tiles = attackedTeamMap.tiles;
+
+    for (const row of tiles) {
+      for (const tile of row) {
+        if (tile.shipPart) {
+          tile.isShipPartDestroyed = true;
+        }
+      }
+    }
+
+    return true;
   }
 }

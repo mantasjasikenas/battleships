@@ -16,10 +16,11 @@ import { useNavigate } from "react-router-dom";
 import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
 import { AttackCommand, AttackFactory } from "@/models/command";
-import GameFacade from "@/services/GameFacade";
+import GameFacadeProxy from "@/services/GameFacadeProxy";
 import AdminPanel from "../AdminPanel";
 import { AdminActions } from "@/models/AdminActions";
-import { AmmoType } from '../../models/Ammo'; 
+import { AmmoType } from "../../models/Ammo";
+import GameFacade from "@/services/GameFacade";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -31,7 +32,8 @@ export default function MatchDisplay() {
   const [gameOver, setGameOver] = useState(false);
   const [gaveUpPlayers, setGaveUpPlayers] = useState([] as number[]);
 
-  const gameFacade = GameFacade.Instance;
+  const gameFacadeProxy = GameFacadeProxy.Instance;
+  const gameFacade = gameFacadeProxy as GameFacade;
   const match = gameFacade.getMatch();
 
   const currentPlayerId = gameFacade.getPlayerFromSessionStorage()!.id;
@@ -90,7 +92,6 @@ export default function MatchDisplay() {
       checkAmmoCooldown(AmmoType.ArmorPiercing);
       checkAmmoCooldown(AmmoType.HighExplosive);
       checkAmmoCooldown(AmmoType.DepthCharge);
-
     }, 1000);
 
     return () => clearInterval(cooldownTimerId);
@@ -100,11 +101,14 @@ export default function MatchDisplay() {
     gameFacade.getMatch().players.forEach((player) => {
       if (ammoType && player.isCooldownDone(ammoType)) {
         const ammoTypeName = AmmoType[ammoType];
-        toast.success(`${ammoTypeName} ammo is ready to fire!`, { id: `${ammoType}-attack-toast`, duration: 3000 });
+        toast.success(`${ammoTypeName} ammo is ready to fire!`, {
+          id: `${ammoType}-attack-toast`,
+          duration: 3000,
+        });
       }
     });
   };
-  
+
   useEffect(() => {
     const turnEndTime = Date.now() + 60 * 1000;
 
@@ -391,28 +395,21 @@ export default function MatchDisplay() {
       command: AdminActions;
     };
 
+    const sender = gameFacade.getMatchPlayer(senderId);
+
+    if (!sender) {
+      console.error(`Player with ID ${senderId} not found.`);
+      return;
+    }
+
     if (command === AdminActions.DestroyAllShips) {
-      const sender = gameFacade.getMatchPlayer(senderId);
-
-      if (!sender) {
-        console.error(`Player with ID ${senderId} not found.`);
-        return;
-      }
-
       const attackedTeam = invertTeam(sender.team);
 
-      const attackedTeamMap = gameFacade.getTeamMap(attackedTeam)!;
-      const tiles = attackedTeamMap.tiles;
-
-      for (const row of tiles) {
-        for (const tile of row) {
-          if (tile.shipPart) {
-            tile.isShipPartDestroyed = true;
-          }
-        }
+      if (gameFacade.destroyAllShips(sender, attackedTeam)) {
+        onGameOver(attackedTeam);
+      } else if (currentPlayer.id === senderId) {
+        toast.error("You are not authorized to perform this action!");
       }
-
-      onGameOver(attackedTeam);
     }
   }
 
@@ -482,7 +479,7 @@ export default function MatchDisplay() {
 
     toast.success(`Player ${player.name} [${player.id}] left the match!`);
 
-    gameFacade.remotePlayerFromMatch(playerId);
+    gameFacade.removePlayerFromMatch(playerId);
 
     if (activePlayer.id === playerId) {
       switchTurn(playerId);
