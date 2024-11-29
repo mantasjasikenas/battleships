@@ -3,12 +3,11 @@ import { Ammo, AmmoType } from "../../models/Ammo";
 import MatchMap, { MapTile } from "../../models/MatchMap";
 import { PlayerTeam } from "../../models/Player";
 import {
-  armorPiercingAttackStrategy,
-  classicAttackStrategy,
-  Context,
   AreaAttackAdapter,
-  standardAttackStrategy,
   AreaStrategy,
+  armorPiercingAttackHandler,
+  classicAttackHandler,
+  standardAttackHandler,
 } from "../../models/strategy";
 export interface AttackTurnEventProps {
   attackerId: number;
@@ -33,25 +32,13 @@ export class AttackHandlerService {
       return () => {};
     }
 
-    switch (ammoType) {
-      case AmmoType.Classic:
-        Context.setStrategy(new classicAttackStrategy());
-        break;
-      case AmmoType.Standard:
-        Context.setStrategy(new standardAttackStrategy());
-        break;
-      case AmmoType.ArmorPiercing:
-        Context.setStrategy(new armorPiercingAttackStrategy());
-        break;
-      case AmmoType.HighExplosive:
-      case AmmoType.DepthCharge: {
-        const adapter = new AreaAttackAdapter(new AreaStrategy());
-        Context.setStrategy(adapter);
-        break;
-      }
+    return (tile: MapTile, map: MatchMap) =>{
+      const clasicHandler = new classicAttackHandler(ammo!, tile, map);
+      const standardHandler = new standardAttackHandler(ammo!, tile, map);
+      const ammorPiercingHandler = new armorPiercingAttackHandler(ammo!, tile, map);
+      const adapter = new AreaAttackAdapter(ammo!, tile, map, new AreaStrategy());
+      clasicHandler.setNext(standardHandler).setNext(ammorPiercingHandler).setNext(adapter);
+      clasicHandler.attack();
     }
-
-    return (tile: MapTile, map: MatchMap) =>
-      Context.executeStrategy(ammo!, tile, map);
   }
 }
