@@ -4,70 +4,164 @@ import MatchMap, { MapTile } from "./MatchMap";
 import { ShipClass } from "./Ships/ShipClass";
 import { ModularShipPart } from "./Ships/ShipPart";
 
-// DESIGN PATTERN: 4. Strategy
-export class Context {
-  private static strategy: Strategy | undefined;
-
-  public static setStrategy(strategy: Strategy) {
-    this.strategy = strategy;
+class AttackInfo {
+  static isAttackPossible(
+    affectedClasses: ShipClass[],
+    shipClass?: ShipClass,
+  ): boolean {
+    return shipClass != null && affectedClasses.includes(shipClass);
   }
-  public static executeStrategy(ammo: Ammo, tile: MapTile, map: MatchMap) {
-    this.strategy?.attack(ammo, tile, map);
+  static isSurfaceAttackPossible(shipClass?: ShipClass) {
+    return this.isAttackPossible(
+      [
+        ShipClass.Carrier,
+        ShipClass.Battleship,
+        ShipClass.Cruiser,
+        ShipClass.Speedboat,
+      ],
+      shipClass,
+    );
+  }
+
+  static isUnderwaterAttackPossible(shipClass?: ShipClass) {
+    return this.isAttackPossible([ShipClass.Submarine], shipClass);
+  }
+
+  static baseAttack(tile: MapTile): void {
+    tile.isAttacked = true;
+  }
+
+  static damageAttack(ammo: Ammo, tile: MapTile, _map: MatchMap): void {
+    if (tile.shipPart) {
+      const shipPart = tile.shipPart as ModularShipPart;
+
+      shipPart.hp -= ammo.damage;
+
+      if (shipPart.hp <= 0) {
+        shipPart.hp = 0;
+        shipPart.isDestroyed = true;
+        tile.isShipPartDestroyed = true;
+      }
+    }
+  }
+
+  static cooldownAttack(
+    ammo: Ammo,
+    tile: MapTile,
+    map: MatchMap,
+    baseAttack: (ammo: Ammo, tile: MapTile, map: MatchMap) => void,
+  ): void {
+    baseAttack(ammo, tile, map);
+
+    const player = MatchProvider.Instance.match.players[0];
+
+    if (player.attackTurns.length > ammo.cooldown) {
+      player.attackTurns.reverse().splice(0, ammo.cooldown).reverse();
+    } else {
+      player.turnOverDraw += ammo.cooldown;
+    }
   }
 }
 
-export interface Strategy {
-  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void;
+// DESIGN PATTERN: 19. Chain Of Responsibility
+export abstract class Handler implements attackStrategy {
+  ammo: Ammo;
+  tile: MapTile;
+  map: MatchMap;
+  nextComp: Handler | undefined;
+  constructor(ammo: Ammo, tile:MapTile, map: MatchMap){
+    this.ammo = ammo;
+    this.tile = tile;
+    this.map = map;
+  }
+  setNext(comp: Handler): Handler{
+    this.nextComp = comp;
+    return comp;
+  }
+  abstract attack(): void;
+  next(): void{
+    if(this.nextComp){
+      this.nextComp.attack();
+    }
+  };
+}
+
+export interface attackStrategy {
+  attack(): void;
+  setNext(nextComp: Handler): Handler;
+  next(): void;
 }
 
 // DESIGN PATTERN: 10. Adapter
-export class AreaAttackAdapter implements Strategy {
+export class AreaAttackAdapter extends Handler {
   private strategy: AreaStrategy;
-  constructor(strategy: AreaStrategy) {
+  constructor(ammo: Ammo, tile: MapTile, map: MatchMap, strategy: AreaStrategy) {
+    super(ammo,tile, map)
     this.strategy = strategy;
   }
-  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-    this.strategy.SetBaseAttack(ammo);
-    this.strategy.AreaAttack(ammo, tile, map);
-  }
-}
-
-export class classicAttackStrategy implements Strategy {
-  attack(_ammo: Ammo, tile: MapTile, _map: MatchMap): void {
-    AttackInfo.baseAttack(tile);
-
-    if (tile.shipPart) {
-      tile.shipPart.isDestroyed = true;
-      tile.isShipPartDestroyed = true;
+  attack(): void {
+    if(this.ammo.type === AmmoType.DepthCharge || this.ammo.type === AmmoType.HighExplosive){
+      this.strategy.SetBaseAttack(this.ammo);
+      this.strategy.AreaAttack(this.ammo, this.tile, this.map);
+    }
+    else{
+      this.next();
     }
   }
 }
 
-export class standardAttackStrategy implements Strategy {
-  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-    AttackInfo.baseAttack(tile);
+export class classicAttackHandler extends Handler {
+  attack(): void {
+    if(this.ammo.type === AmmoType.Classic){
+      AttackInfo.baseAttack(this.tile);
 
-    if (!AttackInfo.isSurfaceAttackPossible(tile.shipPart?.shipClass)) {
+      if (this.tile.shipPart) {
+        this.tile.shipPart.isDestroyed = true;
+        this.tile.isShipPartDestroyed = true;
+      }
+    }
+    else{
+      this.next();
+    }
+  }
+}
+
+export class standardAttackHandler extends Handler {
+  attack(): void {
+    if(this.ammo.type === AmmoType.Standard)
+    {
+    AttackInfo.baseAttack(this.tile);
+
+    if (!AttackInfo.isSurfaceAttackPossible(this.tile.shipPart?.shipClass)) {
       return;
     }
-
-    AttackInfo.damageAttack(ammo, tile, map);
+    AttackInfo.damageAttack(this.ammo, this.tile, this.map);
+  }
+  else{
+    this.next();
+  }
   }
 }
 
-export class armorPiercingAttackStrategy implements Strategy {
-  attack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
+export class armorPiercingAttackHandler extends Handler {
+  attack(): void {
+    if(this.ammo.type === AmmoType.ArmorPiercing)
+    {
     const attack = () => {
-      AttackInfo.baseAttack(tile);
+      AttackInfo.baseAttack(this.tile);
 
-      if (!AttackInfo.isSurfaceAttackPossible(tile.shipPart?.shipClass)) {
+      if (!AttackInfo.isSurfaceAttackPossible(this.tile.shipPart?.shipClass)) {
         return;
       }
 
-      AttackInfo.damageAttack(ammo, tile, map);
+      AttackInfo.damageAttack(this.ammo, this.tile, this.map);
     };
 
-    AttackInfo.cooldownAttack(ammo, tile, map, attack);
+    AttackInfo.cooldownAttack(this.ammo, this.tile, this.map, attack);
+  }
+  else{
+    this.next();
+  }
   }
 }
 
@@ -114,98 +208,6 @@ export class AreaStrategy {
         const tile = map.tiles[i][j];
         this.attack(ammo, tile, map);
       }
-    }
-  }
-}
-
-// export class depthChargeAttackStrategy extends AreaStrategy {
-//   SetBaseAttack(ammo: Ammo, tile: MapTile, map: MatchMap): void {
-
-//     AttackInfo.areaAttack(ammo, tile, map, attack);
-//   }
-// }
-
-class AttackInfo {
-  static isAttackPossible(
-    affectedClasses: ShipClass[],
-    shipClass?: ShipClass,
-  ): boolean {
-    return shipClass != null && affectedClasses.includes(shipClass);
-  }
-  static isSurfaceAttackPossible(shipClass?: ShipClass) {
-    return this.isAttackPossible(
-      [
-        ShipClass.Carrier,
-        ShipClass.Battleship,
-        ShipClass.Cruiser,
-        ShipClass.Speedboat,
-      ],
-      shipClass,
-    );
-  }
-
-  static isUnderwaterAttackPossible(shipClass?: ShipClass) {
-    return this.isAttackPossible([ShipClass.Submarine], shipClass);
-  }
-
-  static baseAttack(tile: MapTile): void {
-    tile.isAttacked = true;
-  }
-
-  static damageAttack(ammo: Ammo, tile: MapTile, _map: MatchMap): void {
-    if (tile.shipPart) {
-      const shipPart = tile.shipPart as ModularShipPart;
-
-      shipPart.hp -= ammo.damage;
-
-      if (shipPart.hp <= 0) {
-        shipPart.hp = 0;
-        shipPart.isDestroyed = true;
-        tile.isShipPartDestroyed = true;
-      }
-    }
-  }
-
-  // static areaAttack(
-  //   ammo: Ammo,
-  //   tile: MapTile,
-  //   map: MatchMap,
-  //   baseAttack: (ammo: Ammo, tile: MapTile, map: MatchMap) => void,
-  // ): void {
-  //   for (
-  //     let i = tile.x - (ammo.impactRadius - 1);
-  //     i < tile.x + ammo.impactRadius;
-  //     i++
-  //   ) {
-  //     for (
-  //       let j = tile.y - (ammo.impactRadius - 1);
-  //       j < tile.y + ammo.impactRadius;
-  //       j++
-  //     ) {
-  //       if (i < 0 || i >= map.tiles.length || j < 0 || j >= map.tiles.length) {
-  //         continue;
-  //       }
-
-  //       const tile = map.tiles[i][j];
-  //       baseAttack(ammo, tile, map);
-  //     }
-  //   }
-  // }
-
-  static cooldownAttack(
-    ammo: Ammo,
-    tile: MapTile,
-    map: MatchMap,
-    baseAttack: (ammo: Ammo, tile: MapTile, map: MatchMap) => void,
-  ): void {
-    baseAttack(ammo, tile, map);
-
-    const player = MatchProvider.Instance.match.players[0];
-
-    if (player.attackTurns.length > ammo.cooldown) {
-      player.attackTurns.reverse().splice(0, ammo.cooldown).reverse();
-    } else {
-      player.turnOverDraw += ammo.cooldown;
     }
   }
 }
