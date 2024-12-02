@@ -1,7 +1,12 @@
 import MatchMap, { MapTile } from "../../../models/MatchMap";
 import { TileColor } from "../../../models/Map/TileColors";
 import { cn } from "@/lib/utils";
-import { ColorCheck, HpCheck, TextCheck, VisibilityCheck } from "@/services/MatchService/shipCheck";
+import {
+  ColorCheck,
+  HpCheck,
+  TextCheck,
+  VisibilityCheck,
+} from "@/services/MatchService/shipCheck";
 
 interface MapGridProps {
   isEnemyMap: boolean;
@@ -62,7 +67,6 @@ function MapGridTile({
   //   tile.shipPart !== undefined && (tile.shipPart as ModularShipPart).hp && !isEnemyMap
   //     ? (tile.shipPart as ModularShipPart).hp.toString()
   //     : undefined;
-
 
   let shipCheck = new TextCheck(tile, isEnemyMap);
   const shipPartText = shipCheck.performCheck();

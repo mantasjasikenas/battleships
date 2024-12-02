@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Ammo } from "../../models/Ammo";
 import { MapTile } from "../../models/MatchMap";
-import { invertTeam, PlayerTeam } from "../../models/Player";
+import { invertTeam, Player, PlayerTeam } from "../../models/Player";
 import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
 import { MatchEventNames } from "../../services/HubConnectionService/HubConnectionService";
 import AmmoRack from "./AmmoRack/AmmoRack";
@@ -21,6 +21,8 @@ import AdminPanel from "../AdminPanel";
 import { AdminActions } from "@/models/AdminActions";
 import { AmmoType } from "../../models/Ammo";
 import GameFacade from "@/services/GameFacade";
+import ShipComposite from "../ShipComposite";
+import ShipLeaf from "../ShipLeaf";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
@@ -31,6 +33,10 @@ export default function MatchDisplay() {
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
   const [gameOver, setGameOver] = useState(false);
   const [gaveUpPlayers, setGaveUpPlayers] = useState([] as number[]);
+
+  const [adminMessage, setAdminMessage] = useState<string | undefined>(
+    undefined,
+  );
 
   const gameFacadeProxy = GameFacadeProxy.Instance;
   const gameFacade = gameFacadeProxy as GameFacade;
@@ -72,6 +78,15 @@ export default function MatchDisplay() {
         gameFacade.sendEvent(MatchEventNames.Admin, {
           senderId: currentPlayerId,
           command: AdminActions.DestroyAllShips,
+        });
+      },
+    },
+    {
+      name: "Report ship status",
+      action: () => {
+        gameFacade.sendEvent(MatchEventNames.Admin, {
+          senderId: currentPlayerId,
+          command: AdminActions.ReportShipStatus,
         });
       },
     },
@@ -249,7 +264,13 @@ export default function MatchDisplay() {
 
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
 
-        {adminMode && <AdminPanel actions={adminActions} />}
+        {adminMode && (
+          <AdminPanel
+            message={adminMessage}
+            actions={adminActions}
+            onMessageClear={() => setAdminMessage(undefined)}
+          />
+        )}
 
         <div className="mt-8 flex justify-center gap-2">
           <Button
@@ -403,14 +424,50 @@ export default function MatchDisplay() {
     }
 
     if (command === AdminActions.DestroyAllShips) {
-      const attackedTeam = invertTeam(sender.team);
-
-      if (gameFacade.destroyAllShips(sender, attackedTeam)) {
-        onGameOver(attackedTeam);
-      } else if (currentPlayer.id === senderId) {
-        toast.error("You are not authorized to perform this action!");
-      }
+      handleDestroyAllShipsEvent(sender);
+    } else if (command === AdminActions.ReportShipStatus) {
+      handleReportShipStatusEvent(sender);
     }
+  }
+
+  function handleDestroyAllShipsEvent(sender: Player): void {
+    const attackedTeam = invertTeam(sender.team);
+
+    if (gameFacade.destroyAllShips(sender, attackedTeam)) {
+      onGameOver(attackedTeam);
+    } else if (currentPlayer.id === sender.id) {
+      toast.error("You are not authorized to perform this action!");
+    }
+  }
+
+  function handleReportShipStatusEvent(sender: Player): void {
+    const allFleets = new ShipComposite("All Fleets");
+
+    const alliesFleet = new ShipComposite("Allies Fleet");
+    const enemiesFleet = new ShipComposite("Enemies Fleet");
+
+    alliesTeamMap.tiles.forEach((row) => {
+      row.forEach((tile) => {
+        if (tile.shipPart) {
+          alliesFleet.add(new ShipLeaf(tile.shipPart, tile.shipPart.shipClass));
+        }
+      });
+    });
+
+    enemiesTeamMap.tiles.forEach((row) => {
+      row.forEach((tile) => {
+        if (tile.shipPart) {
+          enemiesFleet.add(
+            new ShipLeaf(tile.shipPart, tile.shipPart.shipClass),
+          );
+        }
+      });
+    });
+
+    allFleets.add(alliesFleet);
+    allFleets.add(enemiesFleet);
+
+    setAdminMessage(allFleets.display());
   }
 
   function handleAttackTurnEvent(data: any): void {
