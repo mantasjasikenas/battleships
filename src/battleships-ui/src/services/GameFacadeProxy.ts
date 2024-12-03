@@ -1,9 +1,10 @@
 import GameFacade from "./GameFacade";
 import { MatchEventNames } from "./HubConnectionService/HubConnectionService";
 import { Player, PlayerTeam } from "@/models/Player";
+import { IGameFacade } from "./IGameFacade";
 
 // DESIGN PATTERN: 18. Proxy
-class GameFacadeProxy implements GameFacade {
+class GameFacadeProxy implements IGameFacade {
   private static instance: GameFacadeProxy;
   private gameFacade: GameFacade | null = null;
 
@@ -91,6 +92,14 @@ class GameFacadeProxy implements GameFacade {
 
   public removePlayerFromMatch(playerId: number) {
     this.getGameFacade().removePlayerFromMatch(playerId);
+  }
+
+  public saveMatchState() {
+    this.getGameFacade().saveMatchState();
+  }
+
+  public restoreMatchState() {
+    this.getGameFacade().restoreMatchState();
   }
 }
 

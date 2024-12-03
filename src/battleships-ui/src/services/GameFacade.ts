@@ -6,12 +6,17 @@ import { PlayerService } from "./PlayerService/PlayerService";
 import { Match } from "@/models/Match";
 import MatchProvider from "./MatchProvider/MatchProvider";
 import { MatchService } from "./MatchService/MatchService";
+import { MatchCaretaker } from "./MatchCaretaker";
+import { IGameFacade } from "./IGameFacade";
 
 // DESIGN PATTERN: 11. Facade
-export default class GameFacade {
-  private constructor() {}
+export default class GameFacade implements IGameFacade {
+  private constructor() {
+    this.matchCaretaker = new MatchCaretaker();
+  }
 
   private static _instance: GameFacade;
+  private matchCaretaker: MatchCaretaker;
 
   public static get Instance(): GameFacade {
     this._instance ??= new GameFacade();
@@ -89,6 +94,8 @@ export default class GameFacade {
     MatchProvider.reset();
     PlayerService.removeFromSessionStorage();
     HubConnectionService.Instance.clearAll();
+
+    this.matchCaretaker = new MatchCaretaker();
   }
 
   destroyAllShips(sender: Player, attackedTeam: PlayerTeam): boolean {
@@ -104,5 +111,13 @@ export default class GameFacade {
     }
 
     return true;
+  }
+
+  public saveMatchState() {
+    this.matchCaretaker.save();
+  }
+
+  public restoreMatchState() {
+    this.matchCaretaker.restore();
   }
 }

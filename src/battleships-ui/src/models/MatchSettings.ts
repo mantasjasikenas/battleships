@@ -8,6 +8,6 @@ export default class MatchSettings {
   gameMode!: GameMode;
 
   constructor(object?: Partial<MatchSettings>) {
-    this.gameMode = object?.gameMode ?? GameMode.Classic;
+    this.gameMode = object?.gameMode ?? GameMode.Ammo;
   }
 }

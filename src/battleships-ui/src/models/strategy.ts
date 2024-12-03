@@ -57,8 +57,6 @@ class AttackInfo {
 
     if (player.attackTurns.length > ammo.cooldown) {
       player.attackTurns.reverse().splice(0, ammo.cooldown).reverse();
-    } else {
-      player.turnOverDraw += ammo.cooldown;
     }
   }
 }
@@ -69,21 +67,21 @@ export abstract class Handler implements attackStrategy {
   tile: MapTile;
   map: MatchMap;
   nextComp: Handler | undefined;
-  constructor(ammo: Ammo, tile:MapTile, map: MatchMap){
+  constructor(ammo: Ammo, tile: MapTile, map: MatchMap) {
     this.ammo = ammo;
     this.tile = tile;
     this.map = map;
   }
-  setNext(comp: Handler): Handler{
+  setNext(comp: Handler): Handler {
     this.nextComp = comp;
     return comp;
   }
   abstract attack(): void;
-  next(): void{
-    if(this.nextComp){
+  next(): void {
+    if (this.nextComp) {
       this.nextComp.attack();
     }
-  };
+  }
 }
 
 export interface attackStrategy {
@@ -95,16 +93,23 @@ export interface attackStrategy {
 // DESIGN PATTERN: 10. Adapter
 export class AreaAttackAdapter extends Handler {
   private strategy: AreaStrategy;
-  constructor(ammo: Ammo, tile: MapTile, map: MatchMap, strategy: AreaStrategy) {
-    super(ammo,tile, map)
+  constructor(
+    ammo: Ammo,
+    tile: MapTile,
+    map: MatchMap,
+    strategy: AreaStrategy,
+  ) {
+    super(ammo, tile, map);
     this.strategy = strategy;
   }
   attack(): void {
-    if(this.ammo.type === AmmoType.DepthCharge || this.ammo.type === AmmoType.HighExplosive){
+    if (
+      this.ammo.type === AmmoType.DepthCharge ||
+      this.ammo.type === AmmoType.HighExplosive
+    ) {
       this.strategy.SetBaseAttack(this.ammo);
       this.strategy.AreaAttack(this.ammo, this.tile, this.map);
-    }
-    else{
+    } else {
       this.next();
     }
   }
@@ -112,15 +117,14 @@ export class AreaAttackAdapter extends Handler {
 
 export class classicAttackHandler extends Handler {
   attack(): void {
-    if(this.ammo.type === AmmoType.Classic){
+    if (this.ammo.type === AmmoType.Classic) {
       AttackInfo.baseAttack(this.tile);
 
       if (this.tile.shipPart) {
         this.tile.shipPart.isDestroyed = true;
         this.tile.isShipPartDestroyed = true;
       }
-    }
-    else{
+    } else {
       this.next();
     }
   }
@@ -128,40 +132,38 @@ export class classicAttackHandler extends Handler {
 
 export class standardAttackHandler extends Handler {
   attack(): void {
-    if(this.ammo.type === AmmoType.Standard)
-    {
-    AttackInfo.baseAttack(this.tile);
-
-    if (!AttackInfo.isSurfaceAttackPossible(this.tile.shipPart?.shipClass)) {
-      return;
-    }
-    AttackInfo.damageAttack(this.ammo, this.tile, this.map);
-  }
-  else{
-    this.next();
-  }
-  }
-}
-
-export class armorPiercingAttackHandler extends Handler {
-  attack(): void {
-    if(this.ammo.type === AmmoType.ArmorPiercing)
-    {
-    const attack = () => {
+    if (this.ammo.type === AmmoType.Standard) {
       AttackInfo.baseAttack(this.tile);
 
       if (!AttackInfo.isSurfaceAttackPossible(this.tile.shipPart?.shipClass)) {
         return;
       }
-
       AttackInfo.damageAttack(this.ammo, this.tile, this.map);
-    };
+    } else {
+      this.next();
+    }
+  }
+}
 
-    AttackInfo.cooldownAttack(this.ammo, this.tile, this.map, attack);
-  }
-  else{
-    this.next();
-  }
+export class armorPiercingAttackHandler extends Handler {
+  attack(): void {
+    if (this.ammo.type === AmmoType.ArmorPiercing) {
+      const attack = () => {
+        AttackInfo.baseAttack(this.tile);
+
+        if (
+          !AttackInfo.isSurfaceAttackPossible(this.tile.shipPart?.shipClass)
+        ) {
+          return;
+        }
+
+        AttackInfo.damageAttack(this.ammo, this.tile, this.map);
+      };
+
+      AttackInfo.cooldownAttack(this.ammo, this.tile, this.map, attack);
+    } else {
+      this.next();
+    }
   }
 }
 

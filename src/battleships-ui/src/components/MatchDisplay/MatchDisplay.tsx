@@ -17,17 +17,17 @@ import { calculateTeamStats, TeamStats } from "@/lib/statsUtils";
 import Scoreboard from "../Scoreboard";
 import { AttackCommand, AttackFactory } from "@/models/command";
 import GameFacadeProxy from "@/services/GameFacadeProxy";
-import AdminPanel from "../AdminPanel";
+import ActionsPanel from "../AdminPanel";
 import { AdminActions } from "@/models/AdminActions";
-import { AmmoType } from "../../models/Ammo";
-import GameFacade from "@/services/GameFacade";
 import ShipComposite from "../ShipComposite";
 import ShipLeaf from "../ShipLeaf";
+import { IGameFacade } from "@/services/IGameFacade";
+import { MatchService } from "@/services/MatchService/MatchService";
 
 export default function MatchDisplay() {
   const navigate = useNavigate();
 
-  const [adminMode, setAdminMode] = useState(false);
+  const [adminMode, setAdminMode] = useState(true);
 
   const [_, setRerenderToggle] = useState(0);
   const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
@@ -39,7 +39,7 @@ export default function MatchDisplay() {
   );
 
   const gameFacadeProxy = GameFacadeProxy.Instance;
-  const gameFacade = gameFacadeProxy as GameFacade;
+  const gameFacade: IGameFacade = gameFacadeProxy;
   const match = gameFacade.getMatch();
 
   const currentPlayerId = gameFacade.getPlayerFromSessionStorage()!.id;
@@ -90,6 +90,24 @@ export default function MatchDisplay() {
         });
       },
     },
+    {
+      name: "Save match state",
+      action: () => {
+        gameFacade.sendEvent(MatchEventNames.Admin, {
+          senderId: currentPlayerId,
+          command: AdminActions.SaveMatchState,
+        });
+      },
+    },
+    {
+      name: "Restore match state",
+      action: () => {
+        gameFacade.sendEvent(MatchEventNames.Admin, {
+          senderId: currentPlayerId,
+          command: AdminActions.RestoreMatchState,
+        });
+      },
+    },
   ];
 
   const updateCooldowns = () => {
@@ -98,31 +116,37 @@ export default function MatchDisplay() {
     });
   };
 
+  // const resetCooldowns = () => {
+  //   gameFacade.getMatch().players.forEach((player) => {
+  //     player.resetCooldowns();
+  //   });
+  // };
+
   useEffect(() => {
     const cooldownTimerId = setInterval(() => {
       updateCooldowns();
 
-      checkAmmoCooldown(AmmoType.Classic);
-      checkAmmoCooldown(AmmoType.Standard);
-      checkAmmoCooldown(AmmoType.ArmorPiercing);
-      checkAmmoCooldown(AmmoType.HighExplosive);
-      checkAmmoCooldown(AmmoType.DepthCharge);
+      // checkAmmoCooldown(AmmoType.Classic);
+      // checkAmmoCooldown(AmmoType.Standard);
+      // checkAmmoCooldown(AmmoType.ArmorPiercing);
+      // checkAmmoCooldown(AmmoType.HighExplosive);
+      // checkAmmoCooldown(AmmoType.DepthCharge);
     }, 1000);
 
     return () => clearInterval(cooldownTimerId);
   }, []);
 
-  const checkAmmoCooldown = (ammoType: AmmoType) => {
-    gameFacade.getMatch().players.forEach((player) => {
-      if (ammoType && player.isCooldownDone(ammoType)) {
-        const ammoTypeName = AmmoType[ammoType];
-        toast.success(`${ammoTypeName} ammo is ready to fire!`, {
-          id: `${ammoType}-attack-toast`,
-          duration: 3000,
-        });
-      }
-    });
-  };
+  // const checkAmmoCooldown = (ammoType: AmmoType) => {
+  //   gameFacade.getMatch().players.forEach((player) => {
+  //     if (ammoType && player.isCooldownDone(ammoType)) {
+  //       const ammoTypeName = AmmoType[ammoType];
+  //       toast.success(`${ammoTypeName} ammo is ready to fire!`, {
+  //         id: `${ammoType}-attack-toast`,
+  //         duration: 3000,
+  //       });
+  //     }
+  //   });
+  // };
 
   useEffect(() => {
     const turnEndTime = Date.now() + 60 * 1000;
@@ -264,14 +288,6 @@ export default function MatchDisplay() {
 
         <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
 
-        {adminMode && (
-          <AdminPanel
-            message={adminMessage}
-            actions={adminActions}
-            onMessageClear={() => setAdminMessage(undefined)}
-          />
-        )}
-
         <div className="mt-8 flex justify-center gap-2">
           <Button
             disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
@@ -287,6 +303,16 @@ export default function MatchDisplay() {
             Undo
           </Button>
         </div>
+
+        {adminMode && (
+          <div className="pt-8">
+            <ActionsPanel
+              message={adminMessage}
+              actions={adminActions}
+              onMessageClear={() => setAdminMessage(undefined)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -423,11 +449,60 @@ export default function MatchDisplay() {
       return;
     }
 
-    if (command === AdminActions.DestroyAllShips) {
-      handleDestroyAllShipsEvent(sender);
-    } else if (command === AdminActions.ReportShipStatus) {
-      handleReportShipStatusEvent(sender);
+    switch (command) {
+      case AdminActions.DestroyAllShips:
+        handleDestroyAllShipsEvent(sender);
+        break;
+      case AdminActions.ReportShipStatus:
+        handleReportShipStatusEvent(sender);
+        break;
+      case AdminActions.SaveMatchState:
+        handleSaveMatchStateEvent();
+        break;
+      case AdminActions.RestoreMatchState:
+        handleRestoreMatchStateEvent();
+        break;
+      default:
+        console.error(`Unknown admin action: ${command}`);
     }
+  }
+
+  function handleSaveMatchStateEvent(): void {
+    gameFacade.saveMatchState();
+    toast.success("Match state saved!");
+  }
+
+  function handleRestoreMatchStateEvent(): void {
+    const ammo = selectedAmmo;
+
+    gameFacade.restoreMatchState();
+
+    // resets ammo
+    MatchService.initMatchAvailableAmmo();
+
+    const newAmmo = match.availableAmmoTypes.values.find((a) => a === ammo);
+
+    setSelectedAmmo(newAmmo ? newAmmo : match.availableAmmoTypes.values[0]);
+
+    const alliesTeamMap = gameFacade.getTeamMap(currentPlayerTeam)!;
+    const enemiesTeamMap = gameFacade.getTeamMap(enemyTeam)!;
+
+    setAlliesTeamStats(() => calculateTeamStats(alliesTeamMap));
+    setEnemyTeamsStats(() => calculateTeamStats(enemiesTeamMap));
+
+    const activePlayer = match.players.find(
+      (player) => player.attackTurns.length > 0,
+    )!;
+
+    if (!activePlayer) {
+      const player = match.players[0];
+      player.attackTurns.push(new AttackTurn());
+      setActivePlayer(player);
+    } else {
+      setActivePlayer(activePlayer);
+    }
+
+    rerender();
   }
 
   function handleDestroyAllShipsEvent(sender: Player): void {

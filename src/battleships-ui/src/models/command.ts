@@ -73,7 +73,11 @@ export class PlaceShipCommand implements Command {
     )!;
     placer.placedShips--;
 
-    for (let i = 0; i < this.ships[placer.placedShips].partsImplementation.parts.length; i++) {
+    for (
+      let i = 0;
+      i < this.ships[placer.placedShips].partsImplementation.parts.length;
+      i++
+    ) {
       if (this.alignment === 0) {
         currentMap.tiles[this.tile.x][this.tile.y + i].shipPart = undefined;
       } else {
@@ -103,24 +107,25 @@ export class AttackCommand implements Command {
   }
 }
 
-
 // DESIGN PATTERN: 16. Flywieght
-export class AttackFactory{
+export class AttackFactory {
   static attackInfo?: AttackInfo[];
-  public static getInfo(attackerTeam: PlayerTeam, ammoType: AmmoType){
-      let info = this.attackInfo?.find(x => x.ammoType === ammoType && x.attackerTeam === attackerTeam)
-      if(info === undefined){
-        info = new AttackInfo(attackerTeam, ammoType);
-        this.attackInfo?.push(info);
-      }
-      return info;
+  public static getInfo(attackerTeam: PlayerTeam, ammoType: AmmoType) {
+    let info = this.attackInfo?.find(
+      (x) => x.ammoType === ammoType && x.attackerTeam === attackerTeam,
+    );
+    if (info === undefined) {
+      info = new AttackInfo(attackerTeam, ammoType);
+      this.attackInfo?.push(info);
+    }
+    return info;
   }
 }
 
-export class AttackInfo{
+export class AttackInfo {
   attackerTeam: PlayerTeam;
   ammoType: AmmoType;
-  constructor(attackerTeam: PlayerTeam, ammoType: AmmoType){
+  constructor(attackerTeam: PlayerTeam, ammoType: AmmoType) {
     this.attackerTeam = attackerTeam;
     this.ammoType = ammoType;
   }
@@ -160,5 +165,12 @@ export class Invoker {
 
   undo() {
     this.commands.pop()?.undo();
+  }
+
+  clone() {
+    const invoker = new Invoker();
+    invoker.commands = this.commands.map((command) => command);
+    
+    return invoker;
   }
 }

@@ -1,9 +1,9 @@
 import { AmmoReadyToFireState } from "./AmmoReadyToFireState";
 import { AmmoState } from "./AmmoState";
-import GameFacade from "@/services/GameFacade";
-import { Player } from './Player';
+import { Player } from "./Player";
 import { AttackTurn } from "./Turns/AttackTurn";
 import { MapTile } from "./MatchMap";
+import { IGameFacade } from "@/services/IGameFacade";
 
 // non-Classic ammo types used only in "Ammo" gamemode
 export enum AmmoType {
@@ -23,7 +23,12 @@ export class Ammo {
   count!: number;
   state: AmmoState = new AmmoReadyToFireState();
 
-  onAttack(gameFacade: GameFacade, currentPlayer: Player, turn: AttackTurn, selectedTile: MapTile | null): void {
+  onAttack(
+    gameFacade: IGameFacade,
+    currentPlayer: Player,
+    turn: AttackTurn,
+    selectedTile: MapTile | null,
+  ): void {
     this.state.onAttack(this, gameFacade, currentPlayer, turn, selectedTile);
   }
 
@@ -32,7 +37,7 @@ export class Ammo {
       return model;
     }
 
-    model.name = object.name ?? 'Standard';
+    model.name = object.name ?? "Standard";
     model.type = object.type ?? AmmoType.Standard;
     model.damage = object.damage ?? 1;
     model.impactRadius = object.impactRadius ?? 1;

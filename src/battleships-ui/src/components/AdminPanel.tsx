@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@radix-ui/react-label";
 import { Textarea } from "./ui/textarea";
 
-export default function AdminPanel({
+export default function ActionsPanel({
   actions,
   message,
   onMessageClear,
@@ -13,7 +13,7 @@ export default function AdminPanel({
 }) {
   return (
     <div className="mt-8 flex flex-col items-center gap-2">
-      <Label className="font-bold">Admin Panel</Label>
+      <Label className="font-bold">Actions</Label>
 
       {message && (
         <div className="grid w-full max-w-[550px] gap-1.5 pb-1.5">

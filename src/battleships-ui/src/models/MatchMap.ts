@@ -37,6 +37,10 @@ export default class MatchMap {
   copy() {
     return new MatchMap(this);
   }
+
+  clone(): MatchMap {
+    return new MatchMap(this);
+  }
 }
 
 export class MapTile {
