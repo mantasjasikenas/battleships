@@ -6,7 +6,7 @@ import { PlayerService } from "./PlayerService/PlayerService";
 import { Match } from "@/models/Match";
 import MatchProvider from "./MatchProvider/MatchProvider";
 import { MatchService } from "./MatchService/MatchService";
-import { MatchCaretaker } from "./MatchCaretaker";
+import { MatchCaretaker } from "./MatchMemento";
 import { IGameFacade } from "./IGameFacade";
 
 // DESIGN PATTERN: 11. Facade

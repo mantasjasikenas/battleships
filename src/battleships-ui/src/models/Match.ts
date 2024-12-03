@@ -1,8 +1,8 @@
+import { Memento, MatchState, MatchMemento } from "@/services/MatchMemento";
 import MatchMap from "./MatchMap";
 import MatchSettings from "./MatchSettings";
 import { Player, PlayerTeam } from "./Player";
 import { AmmoCollection } from "./Ships/iterators/AmmoCollection";
-import { MatchState, Memento, MatchMemento } from "./MatchMemento";
 
 export class Match {
   name: string = "New Match";
@@ -29,9 +29,7 @@ export class Match {
     return new MatchMemento(state);
   }
 
-  restoreState(memento: Memento) {
-    const state = memento.getState();
-
+  setState(state: MatchState) {
     this.players = state.players;
     this.duration = state.duration;
     this.teamsMap = state.teamsMap;
