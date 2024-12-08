@@ -2,6 +2,7 @@ import { ShipClass } from "../ShipClass";
 import { ShipPartsVisitor } from "./ShipPartsVisitor";
 import { ClassicPartsImplementation } from "../ClassicPartsImplementation";
 import { ModularPartsImplementation } from "../ModularPartsImplementation";
+import { ObservingPartsImplementation } from "../ObservingPartsImplementation";
 
 export class ShipPartsVisibilityVisitor implements ShipPartsVisitor {
   visitClassicPartsImplementation(
@@ -26,6 +27,26 @@ export class ShipPartsVisibilityVisitor implements ShipPartsVisitor {
 
   visitModularPartsImplementation(
     _implementation: ModularPartsImplementation,
+    shipClass: ShipClass
+  ): string {
+    switch (shipClass) {
+      case ShipClass.Carrier:
+        return "3";
+      case ShipClass.Battleship:
+        return "5";
+      case ShipClass.Cruiser:
+        return "3";
+      case ShipClass.Submarine:
+        return "2";
+      case ShipClass.Speedboat:
+        return "1";
+      default:
+        throw new Error("Unsupported ShipClass for visibility generation");
+    }
+  }
+
+  visitObservingPartsImplementation(
+    _implementation: ObservingPartsImplementation,
     shipClass: ShipClass
   ): string {
     switch (shipClass) {
