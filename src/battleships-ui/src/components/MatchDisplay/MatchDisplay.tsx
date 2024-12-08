@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { Ammo } from "../../models/Ammo";
-import { MapTile } from "../../models/MatchMap";
 import { invertTeam, Player, PlayerTeam } from "../../models/Player";
 import { AttackTurnEventProps } from "../../services/AttackHandlerService/AttackHandlerService";
 import { MatchEventNames } from "../../services/HubConnectionService/HubConnectionService";
@@ -23,14 +21,95 @@ import ShipComposite from "../ShipComposite";
 import ShipLeaf from "../ShipLeaf";
 import { IGameFacade } from "@/services/IGameFacade";
 import { MatchService } from "@/services/MatchService/MatchService";
+import {  AmmoSelect, ButtonClicked, SelectedTile, attackEvent } from "@/services/MatchService/actionLoger";
+import { MapTile } from "@/models/MatchMap";
+import { Ammo } from "@/models/Ammo";
+
+// DESIGN PATTERN: 21. Mediator
+
+export interface Mediator {
+  currentPlayer: Player;
+  gameFacade: IGameFacade;
+  selectedTile: MapTile | null;
+  selectedAmmo: Ammo | null;
+  notify(sender: attackEvent, event: string): void;
+}
 
 export default function MatchDisplay() {
+
+class actionMediator implements Mediator{
+
+    currentPlayer: Player;
+    gameFacade: IGameFacade;
+    selectedTile: MapTile | null;
+    selectedAmmo: Ammo | null;
+
+    constructor(currentPlayer: Player, gameFacade: IGameFacade){
+        this.currentPlayer = currentPlayer;
+        this.gameFacade = gameFacade;
+        this.selectedTile = null
+        this.selectedAmmo = null;
+    }
+    notify(sender: attackEvent, event: string): void {
+        if(sender instanceof SelectedTile && event === "Enemie"){
+            if (this.currentPlayer.attackTurns.length < 1) 
+                {
+                toast.error("Sorry, it is not your turn!", { id: "not-your-turn-toast" });
+              }
+              else{
+                this.selectedTile = sender.getile();
+                setTile(this.selectedTile);
+              const turn = this.currentPlayer.attackTurns[0];
+              turn.tile = this.selectedTile as MapTile;
+                
+            }
+        }
+        else if(sender instanceof SelectedTile && event === "Own"){
+            const turn = this.currentPlayer.attackTurns[0];
+            turn.tile = undefined!;
+            toast.error("Cannot attack own ships!", { id: "own-ship-attack-toast" });
+        }
+        else if(sender instanceof AmmoSelect && event === "Select"){
+            this.selectedAmmo = sender.getAmmo();
+            setAmmo(this.selectedAmmo);
+            this.currentPlayer.attackTurns[0].ammo = sender.getAmmo() as Ammo;
+        }
+        else if(sender instanceof ButtonClicked && event === "Undo"){
+            this.gameFacade.sendEvent(MatchEventNames.UndoCommand, {
+                userId: this.currentPlayer.id,
+              });
+        }
+        else if(sender instanceof ButtonClicked && event === "Attack"){
+            const turn = this.currentPlayer.attackTurns[0];
+    
+            console.log(turn.ammo, this.selectedAmmo);
+            if (!turn.ammo && this.selectedAmmo) {
+                turn.ammo = this.selectedAmmo;
+            }
+    
+            if (!turn.tile || !turn.ammo) {
+                    toast.error("Select ammo and tile to attack first!", {
+                        id: "attack-toast",
+                    });
+            }
+            else{
+                turn.ammo.onAttack(this.gameFacade, this.currentPlayer, turn, turn.tile);
+                    this.selectedTile = null
+                    setTile(null);
+            }
+        }
+    }
+
+}
+
+
+
   const navigate = useNavigate();
 
   const [adminMode, setAdminMode] = useState(true);
 
   const [_, setRerenderToggle] = useState(0);
-  const [selectedTile, setSelectedTile] = useState<MapTile | null>(null);
+
   const [gameOver, setGameOver] = useState(false);
   const [gaveUpPlayers, setGaveUpPlayers] = useState([] as number[]);
 
@@ -45,6 +124,13 @@ export default function MatchDisplay() {
   const currentPlayerId = gameFacade.getPlayerFromSessionStorage()!.id;
   const currentPlayer = gameFacade.getMatchPlayer(currentPlayerId)!;
 
+  const [mediator, _setMediator] = useState<Mediator>(new actionMediator(currentPlayer, gameFacade));
+  const [selectedTileInfo, _setTileInfo] = useState<SelectedTile>(new SelectedTile(mediator));
+  const [ammoInfo, _setAmmoInfo] = useState<AmmoSelect>(new AmmoSelect(mediator));
+  const [selTile, setTile] = useState<MapTile | null>(null);
+  const [selAmmo, setAmmo] = useState<Ammo | null>(null)
+
+
   const currentPlayerTeam = currentPlayer.team;
   const enemyTeam = invertTeam(currentPlayerTeam);
 
@@ -58,9 +144,13 @@ export default function MatchDisplay() {
     match.players.find((player) => player.attackTurns.length > 0)!,
   );
 
-  const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(
-    match.availableAmmoTypes.values[0],
-  );
+  // const [selectedAmmo, setSelectedAmmo] = useState<Ammo | null>(
+  //   match.availableAmmoTypes.values[0],
+  // );
+
+  const button = new ButtonClicked(mediator);
+
+  
 
   const [turnRemainingTime, setTurnRemainingTime] = useState(60);
 
@@ -121,6 +211,8 @@ export default function MatchDisplay() {
   //     player.resetCooldowns();
   //   });
   // };
+
+  useEffect(() => {}, [mediator] );
 
   useEffect(() => {
     const cooldownTimerId = setInterval(() => {
@@ -242,8 +334,8 @@ export default function MatchDisplay() {
               isEnemyMap={false}
               map={alliesTeamMap}
               title="Your map"
-              selectedTile={selectedTile}
-              onTileSelect={onOwnTileSelect}
+              selectedTile={selTile}
+              onTileSelect={selectedTileInfo.onOwnTileSelect}
             />
           </div>
 
@@ -278,27 +370,27 @@ export default function MatchDisplay() {
               isEnemyMap={true}
               map={enemiesTeamMap}
               title="Enemy map"
-              selectedTile={selectedTile}
-              onTileSelect={onAttackTurnTargetTileSelect}
+              selectedTile={selTile}
+              onTileSelect={selectedTileInfo.onAttackTurnTargetTileSelect}
             />
           </div>
         </div>
 
         <GameLegend />
 
-        <AmmoRack selectedAmmo={selectedAmmo} onAmmoSelect={onAmmoSelect} />
+        <AmmoRack selectedAmmo={selAmmo} onAmmoSelect={ammoInfo.AttackSelect} />
 
         <div className="mt-8 flex justify-center gap-2">
           <Button
-            disabled={!selectedTile || currentPlayer.attackTurns.length < 1}
+            disabled={!selTile || currentPlayer.attackTurns.length < 1}
             variant={"destructive"}
-            onClick={() => onAttack()}
+            onClick={() => button.onAttack()}
           >
             Attack!
           </Button>
           <Button
             disabled={currentPlayer.invoker.commands.length < 1}
-            onClick={() => onUndo()}
+            onClick={() => button.onUndo()}
           >
             Undo
           </Button>
@@ -324,53 +416,56 @@ export default function MatchDisplay() {
     rerender();
   }
 
-  function onAmmoSelect(ammo: Ammo): void {
-    setSelectedAmmo(ammo);
-    currentPlayer.attackTurns[0].ammo = ammo;
-  }
+  
 
-  function onAttackTurnTargetTileSelect(tile: MapTile): void {
-    if (currentPlayer.attackTurns.length < 1) {
-      toast.error("Sorry, it is not your turn!", { id: "not-your-turn-toast" });
-      return;
-    }
+  // function onAmmoSelect(ammo: Ammo): void {
+  //   setSelectedAmmo(ammo);
+  //   currentPlayer.attackTurns[0].ammo = ammo;
+  // }
 
-    const turn = currentPlayer.attackTurns[0];
-    setSelectedTile(tile);
+  // function onAttackTurnTargetTileSelect(tile: MapTile): void {
+  //   if (currentPlayer.attackTurns.length < 1) {
+  //     toast.error("Sorry, it is not your turn!", { id: "not-your-turn-toast" });
+  //     return;
+  //   }
 
-    turn.tile = tile;
-  }
+  //   const turn = currentPlayer.attackTurns[0];
+  //   selectedTileInfo.setTile(tile);
+  //   setSelectedTile(tile);
 
-  function onOwnTileSelect(): void {
-    const turn = currentPlayer.attackTurns[0];
-    setSelectedTile(null);
-    turn.tile = undefined!;
-    toast.error("Cannot attack own ships!", { id: "own-ship-attack-toast" });
-  }
+  //   turn.tile = tile;
+  // }
 
-  function onAttack(): void {
-    const turn = currentPlayer.attackTurns[0];
+  // function onOwnTileSelect(): void {
+  //   const turn = currentPlayer.attackTurns[0];
+  //   setSelectedTile(null);
+  //   turn.tile = undefined!;
+  //   toast.error("Cannot attack own ships!", { id: "own-ship-attack-toast" });
+  // }
 
-    if (!turn.ammo && selectedAmmo) {
-      turn.ammo = selectedAmmo;
-    }
+  // function onAttack(): void {
+  //   const turn = currentPlayer.attackTurns[0];
 
-    if (!turn.tile || !turn.ammo) {
-      toast.error("Select ammo and tile to attack first!", {
-        id: "attack-toast",
-      });
+  //   if (!turn.ammo && selectedAmmo) {
+  //     turn.ammo = selectedAmmo;
+  //   }
 
-      return;
-    }
-    turn.ammo.onAttack(gameFacade, currentPlayer, turn, turn.tile);
-    setSelectedTile(null);
-  }
+  //   if (!turn.tile || !turn.ammo) {
+  //     toast.error("Select ammo and tile to attack first!", {
+  //       id: "attack-toast",
+  //     });
 
-  function onUndo(): void {
-    gameFacade.sendEvent(MatchEventNames.UndoCommand, {
-      userId: currentPlayerId,
-    });
-  }
+  //     return;
+  //   }
+  //   turn.ammo.onAttack(gameFacade, currentPlayer, turn, turn.tile);
+  //   setSelectedTile(null);
+  // }
+
+  // function onUndo(): void {
+  //   gameFacade.sendEvent(MatchEventNames.UndoCommand, {
+  //     userId: currentPlayerId,
+  //   });
+  // }
 
   function onGaveUp(): void {
     gameFacade.sendEvent(MatchEventNames.PlayerGaveUp, {
@@ -473,7 +568,7 @@ export default function MatchDisplay() {
   }
 
   function handleRestoreMatchStateEvent(): void {
-    const ammo = selectedAmmo;
+    const ammo = mediator.selectedAmmo;
 
     gameFacade.restoreMatchState();
 
@@ -482,7 +577,9 @@ export default function MatchDisplay() {
 
     const newAmmo = match.availableAmmoTypes.values.find((a) => a === ammo);
 
-    setSelectedAmmo(newAmmo ? newAmmo : match.availableAmmoTypes.values[0]);
+    ammoInfo.setAmmo(newAmmo ? newAmmo : null);
+
+    // setSelectedAmmo(newAmmo ? newAmmo : match.availableAmmoTypes.values[0]);
 
     const alliesTeamMap = gameFacade.getTeamMap(currentPlayerTeam)!;
     const enemiesTeamMap = gameFacade.getTeamMap(enemyTeam)!;
