@@ -21,12 +21,7 @@ export class SelectedTile extends Component{
         this.tile = null;
         this.onOwnTileSelect = this.onOwnTileSelect.bind(this);
         this.getile = this.getile.bind(this);
-        this.setTile = this.setTile.bind(this);
         this.onAttackTurnTargetTileSelect = this.onAttackTurnTargetTileSelect.bind(this);
-    }
-    setTile(tile: MapTile | null){
-        this.tile = tile;
-        this.mediator.notify(this, "Set");  
     }
     getile(){
         return this.tile;
@@ -43,21 +38,19 @@ export class SelectedTile extends Component{
 
 export class AmmoSelect extends Component{
 
-    private selectedAmmo: Ammo;
-    constructor(mediator: Mediator, ammo: Ammo){
+    private selectedAmmo: Ammo | null;
+    constructor(mediator: Mediator){
         super(mediator)
-        this.selectedAmmo = ammo;
+        this.selectedAmmo = null;
         this.getAmmo = this.getAmmo.bind(this);
         this.setAmmo = this.setAmmo.bind(this);
         this.AttackSelect = this.AttackSelect.bind(this);
-        this.mediator.notify(this, "Set");
     }
     getAmmo(){
         return this.selectedAmmo;
     }
-    setAmmo(ammo: Ammo){
+    setAmmo(ammo: Ammo | null){
         this.selectedAmmo = ammo;
-        this.mediator.notify(this, "Set");
     }
     AttackSelect(ammo: Ammo){
         this.selectedAmmo = ammo;
@@ -82,23 +75,25 @@ interface Mediator {
 export class actionMediator implements Mediator{
     currentPlayer: Player;
     gameFacade: IGameFacade;
-    selctedTileInfo: SelectedTile | undefined;
-    selectedAmmoInfo: AmmoSelect | undefined;
+    selectedTile: MapTile | null;
+    selectedAmmo: Ammo | null;
 
     constructor(currentPlayer: Player, gameFacade: IGameFacade){
         this.currentPlayer = currentPlayer;
         this.gameFacade = gameFacade;
+        this.selectedTile = null
+        this.selectedAmmo = null;
     }
     notify(sender: Component, event: string): void {
         if(sender instanceof SelectedTile && event === "Enemie"){
-            this.selctedTileInfo = sender;
             if (this.currentPlayer.attackTurns.length < 1) 
                 {
                 toast.error("Sorry, it is not your turn!", { id: "not-your-turn-toast" });
               }
               else{
+                this.selectedTile = sender.getile();
               const turn = this.currentPlayer.attackTurns[0];
-              turn.tile = this.selctedTileInfo.getile() as MapTile;
+              turn.tile = this.selectedTile as MapTile;
                 
             }
         }
@@ -107,15 +102,9 @@ export class actionMediator implements Mediator{
             turn.tile = undefined!;
             toast.error("Cannot attack own ships!", { id: "own-ship-attack-toast" });
         }
-        else if(sender instanceof AmmoSelect && event === "Set"){
-            this.selectedAmmoInfo = sender;
-        }
         else if(sender instanceof AmmoSelect && event === "Select"){
-            this.selectedAmmoInfo = sender;
-            this.currentPlayer.attackTurns[0].ammo = sender.getAmmo();
-        }
-        else if(sender instanceof SelectedTile && event === "Set"){
-            this.selctedTileInfo = sender;
+            this.selectedAmmo = sender.getAmmo();
+            this.currentPlayer.attackTurns[0].ammo = sender.getAmmo() as Ammo;
         }
         else if(sender instanceof ButtonClicked && event === "Undo"){
             this.gameFacade.sendEvent(MatchEventNames.UndoCommand, {
@@ -125,9 +114,9 @@ export class actionMediator implements Mediator{
         else if(sender instanceof ButtonClicked && event === "Attack"){
             const turn = this.currentPlayer.attackTurns[0];
     
-            console.log(turn.ammo, this.selectedAmmoInfo?.getAmmo());
-            if (!turn.ammo && this.selectedAmmoInfo?.getAmmo()) {
-                turn.ammo = this.selectedAmmoInfo.getAmmo();
+            console.log(turn.ammo, this.selectedAmmo);
+            if (!turn.ammo && this.selectedAmmo) {
+                turn.ammo = this.selectedAmmo;
             }
     
             if (!turn.tile || !turn.ammo) {
@@ -137,10 +126,7 @@ export class actionMediator implements Mediator{
             }
             else{
                 turn.ammo.onAttack(this.gameFacade, this.currentPlayer, turn, turn.tile);
-                if(this.selctedTileInfo)
-                {
-                    this.selctedTileInfo.setTile(null);
-                }  
+                    this.selectedTile = null
             }
         }
     }

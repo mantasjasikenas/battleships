@@ -44,9 +44,9 @@ export default function MatchDisplay() {
   const currentPlayerId = gameFacade.getPlayerFromSessionStorage()!.id;
   const currentPlayer = gameFacade.getMatchPlayer(currentPlayerId)!;
 
-  const mediator = new actionMediator(currentPlayer, gameFacade);
+  const [mediator, _setMediator] = useState<actionMediator>(new actionMediator(currentPlayer, gameFacade));
   const [selectedTileInfo, _setTileInfo] = useState<SelectedTile>(new SelectedTile(mediator));
-  const [ammoInfo, _setAmmoInfo] = useState<AmmoSelect>(new AmmoSelect(mediator, match.availableAmmoTypes.values[0]));
+  const [ammoInfo, _setAmmoInfo] = useState<AmmoSelect>(new AmmoSelect(mediator));
 
   const currentPlayerTeam = currentPlayer.team;
   const enemyTeam = invertTeam(currentPlayerTeam);
@@ -249,7 +249,7 @@ export default function MatchDisplay() {
               isEnemyMap={false}
               map={alliesTeamMap}
               title="Your map"
-              selectedTile={selectedTileInfo.getile()}
+              selectedTile={mediator.selectedTile}
               onTileSelect={selectedTileInfo.onOwnTileSelect}
             />
           </div>
@@ -285,7 +285,7 @@ export default function MatchDisplay() {
               isEnemyMap={true}
               map={enemiesTeamMap}
               title="Enemy map"
-              selectedTile={selectedTileInfo.getile()}
+              selectedTile={ mediator.selectedTile}
               onTileSelect={selectedTileInfo.onAttackTurnTargetTileSelect}
             />
           </div>
@@ -297,7 +297,7 @@ export default function MatchDisplay() {
 
         <div className="mt-8 flex justify-center gap-2">
           <Button
-            disabled={!selectedTileInfo.getile() || currentPlayer.attackTurns.length < 1}
+            disabled={!mediator.selectedTile || currentPlayer.attackTurns.length < 1}
             variant={"destructive"}
             onClick={() => button.onAttack()}
           >
@@ -481,7 +481,7 @@ export default function MatchDisplay() {
   }
 
   function handleRestoreMatchStateEvent(): void {
-    const ammo = ammoInfo.getAmmo();
+    const ammo = mediator.selectedAmmo;
 
     gameFacade.restoreMatchState();
 
@@ -490,7 +490,7 @@ export default function MatchDisplay() {
 
     const newAmmo = match.availableAmmoTypes.values.find((a) => a === ammo);
 
-    ammoInfo.setAmmo(newAmmo ? newAmmo : match.availableAmmoTypes.values[0]);
+    ammoInfo.setAmmo(newAmmo ? newAmmo : null);
 
     // setSelectedAmmo(newAmmo ? newAmmo : match.availableAmmoTypes.values[0]);
 
