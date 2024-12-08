@@ -93,7 +93,7 @@ function MapGridTile({
     displayText = visibilityText + colorText + textText;
 
     // if(displayText != ""){
-    //    console.log(visibilityText + colorText + textText);
+    //    console.log(shipPartVisibility + " " + shipPartColor + " " + shipPartText);
     // }
   }
 
