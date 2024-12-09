@@ -3,6 +3,7 @@ import { ModularPartsImplementation } from "../ModularPartsImplementation";
 import { ClassicPartsImplementation } from "../ClassicPartsImplementation";
 import { ObservingPartsImplementation } from "../ObservingPartsImplementation";
 
+// DESIGN PATTERN: 23. Visitor
 export interface ShipPartsVisitor {
   visitClassicPartsImplementation(
     implementation: ClassicPartsImplementation,

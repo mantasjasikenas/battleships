@@ -107,7 +107,7 @@ export class AttackCommand implements Command {
   }
 }
 
-// DESIGN PATTERN: 16. Flywieght
+// DESIGN PATTERN: 16. Flyweight
 export class AttackFactory {
   static attackInfo?: AttackInfo[];
   public static getInfo(attackerTeam: PlayerTeam, ammoType: AmmoType) {

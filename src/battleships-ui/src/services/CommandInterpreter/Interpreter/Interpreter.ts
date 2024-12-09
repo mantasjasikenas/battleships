@@ -13,6 +13,7 @@ export interface CommsEventProps {
   message: string;
 }
 
+// DESIGN PATTERN: 20. Interpreter
 export interface IInterpreter {
   interpret(input: string): void;
 }
@@ -47,9 +48,6 @@ export class Interpreter implements IInterpreter {
       }
       case "/undo": {
         return this.tryResolveUndoCommandExpression(tokens);
-      }
-      case "/msg": {
-        return this.tryResolveMessageCommandExpression(tokens);
       }
       default: {
         toast.error("No such command");
